@@ -5,10 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TTS"
         xmlns:vm="clr-namespace:TTS.ViewModel"
+        xmlns:c="clr-namespace:TTS.Converter"
         mc:Ignorable="d"
         Title="TTS" Height="450" Width="800">
     <Window.Resources>
         <vm:MainPageViewModel x:Key="MainPageViewModel" />
+        <c:IsRunningToStringConverter x:Key="IsRunningToStringConverter" />
     </Window.Resources>
     <Window.DataContext>
         <vm:MainPageViewModel/>
@@ -61,13 +63,13 @@
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
                     <Button Margin="8" Grid.Column="0" Command="{Binding Path=PlayCommand}">Play</Button>
-                    <Button Margin="8" Grid.Column="1" Command="{Binding Path=PauseCommand}">Pause</Button>
+                    <Button Margin="8" Grid.Column="1" Command="{Binding Path=PauseCommand}" Content="{Binding Path=IsRunning, Mode=TwoWay, Converter={StaticResource IsRunningToStringConverter}}"></Button>
                     <Button Margin="8" Grid.Column="2" Command="{Binding Path=StopCommand}">Stop</Button>
                 </Grid>
 
             </Grid>
             <Grid Column="1" Margin="10">
-                <TextBox Text="{Binding Path=Text, Mode=TwoWay}"></TextBox>
+                <TextBox Text="{Binding Path=Text, Mode=TwoWay}" TextWrapping="Wrap" AcceptsReturn="True" AcceptsTab="True"></TextBox>
             </Grid>
         </Grid>
     </DockPanel>

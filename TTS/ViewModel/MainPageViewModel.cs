@@ -14,13 +14,18 @@ using TTS.Command;
 
 namespace TTS.ViewModel
 {
-    public class MainPageViewModel: INotifyPropertyChanged
+    public class MainPageViewModel : INotifyPropertyChanged
     {
         public MainPageViewModel()
         {
             this.Rate = 0;
             this.Volume = 50;
+            this.Text = "twoja stara klaszcze u rubika. To jest zdanie testowe 1. To jest zdanie testowe 2.";
+            this.Voices = this.SpeechSynthesizer.GetInstalledVoices().Select(v => v.VoiceInfo.Name).ToList();
+            this.selectedVoice = this.Voices.FirstOrDefault();
+            this.IsRunning = false;
         }
+
         private SpeechSynthesizer speechSynthesizer;
         public SpeechSynthesizer SpeechSynthesizer
         {
@@ -31,6 +36,17 @@ namespace TTS.ViewModel
                     this.speechSynthesizer = new SpeechSynthesizer();
                 }
                 return this.speechSynthesizer;
+            }
+        }
+
+        bool isRunning;
+        public bool IsRunning
+        {
+            get => this.isRunning;
+            set
+            {
+                this.isRunning = value;
+                this.OnPropertyChanged(nameof(this.IsRunning));
             }
         }
 
@@ -56,8 +72,8 @@ namespace TTS.ViewModel
             }
         }
 
-        ObservableCollection<string> voices;
-        public ObservableCollection<string> Voices
+        ICollection<string> voices;
+        public ICollection<string> Voices
         {
             get => this.voices;
             set
@@ -100,6 +116,7 @@ namespace TTS.ViewModel
                         {
                             this.SpeechSynthesizer.Rate = this.Rate;
                             this.SpeechSynthesizer.Volume = this.Volume;
+                            this.IsRunning = true;
                             this.SpeechSynthesizer.SpeakAsync(this.Text);
                         }
                     );
@@ -113,7 +130,22 @@ namespace TTS.ViewModel
             get
             {
                 if (this.pauseCommand == null)
-                    this.pauseCommand = new PauseCommand();
+                    this.pauseCommand = new RelayCommand(
+                        x =>
+                        {
+                            if (this.IsRunning)
+                            {
+                                this.IsRunning = false;
+                                this.SpeechSynthesizer.Pause();
+                            }
+                            else
+                            {
+                                this.IsRunning = true;
+                                this.SpeechSynthesizer.Resume();
+                            }
+
+                        }
+                    );
                 return this.pauseCommand;
             }
         }
@@ -127,7 +159,8 @@ namespace TTS.ViewModel
                     this.stopCommand = new RelayCommand(
                         x =>
                         {
-                            this.SpeechSynthesizer.Dispose();
+                            this.IsRunning = false;
+                            this.SpeechSynthesizer.SpeakAsyncCancelAll();
                         }
                     );
                 return this.stopCommand;
@@ -158,6 +191,10 @@ namespace TTS.ViewModel
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            if (propertyName == nameof(this.SelectedVoice))
+            {
+                this.SpeechSynthesizer.SelectVoice(this.SelectedVoice);
+            }
         }
     }
 }

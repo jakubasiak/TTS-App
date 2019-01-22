@@ -59,11 +59,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Compile Include="Command\PauseCommand.cs" />
-    <Compile Include="Command\PlayCommand.cs" />
-    <Compile Include="Command\StopCommand.cs" />
-    <Compile Include="Properties\Annotations.cs" />
     <Compile Include="Command\RelayCommand.cs" />
+    <Compile Include="Converter\IsRunningToStringConverter.cs" />
+    <Compile Include="Properties\Annotations.cs" />
     <Compile Include="ViewModel\MainPageViewModel.cs" />
     <Compile Include="View\App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
