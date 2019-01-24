@@ -61,6 +61,7 @@
     </Page>
     <Compile Include="Command\RelayCommand.cs" />
     <Compile Include="Converter\IsRunningToStringConverter.cs" />
+    <Compile Include="Extension\FocusExtension.cs" />
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="ViewModel\MainPageViewModel.cs" />
     <Compile Include="View\App.xaml.cs">

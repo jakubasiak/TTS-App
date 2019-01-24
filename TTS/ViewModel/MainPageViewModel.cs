@@ -20,10 +20,14 @@ namespace TTS.ViewModel
         {
             this.Rate = 0;
             this.Volume = 50;
-            this.Text = "twoja stara klaszcze u rubika. To jest zdanie testowe 1. To jest zdanie testowe 2.";
+            this.Text = "Twoja stara klaszcze u rubika. To jest zdanie testowe 1. To jest zdanie testowe 2. To jest jeszcze dłuższe zdanie testowe, które pozwoli mi na przetestowanie wielu funkcjonalności.";
             this.Voices = this.SpeechSynthesizer.GetInstalledVoices().Select(v => v.VoiceInfo.Name).ToList();
             this.selectedVoice = this.Voices.FirstOrDefault();
             this.IsRunning = false;
+            this.Position = 0; 
+            this.SpeechSynthesizer.SpeakCompleted += this.SpeechSynthesizer_SpeakCompleted;
+            this.SpeechSynthesizer.SpeakProgress += this.SpeechSynthesizer_SpeakProgress;
+            this.SpeechSynthesizer.SpeakStarted += this.SpeechSynthesizer_SpeakStarted;
         }
 
         private SpeechSynthesizer speechSynthesizer;
@@ -94,6 +98,30 @@ namespace TTS.ViewModel
             }
         }
 
+        string currentText;
+        public string CurrentText
+        {
+            get => this.currentText;
+            set
+            {
+                this.currentText = value;
+                this.OnPropertyChanged(nameof(this.CurrentText));
+            }
+        }
+
+        int position;
+        public int Position
+        {
+            get => this.position;
+            set
+            {
+                this.position = value;
+                this.OnPropertyChanged(nameof(this.Position));
+            }
+        }
+
+        private string orginalText;
+
         string text;
         public string Text
         {
@@ -161,6 +189,8 @@ namespace TTS.ViewModel
                         {
                             this.IsRunning = false;
                             this.SpeechSynthesizer.SpeakAsyncCancelAll();
+                            this.CurrentText = null;
+                            this.Position = 0;
                         }
                     );
                 return this.stopCommand;
@@ -195,6 +225,34 @@ namespace TTS.ViewModel
             {
                 this.SpeechSynthesizer.SelectVoice(this.SelectedVoice);
             }
+            if (propertyName == nameof(this.Volume) || propertyName == nameof(this.Rate) || propertyName == nameof(this.SelectedVoice))
+            {
+                if (this.IsRunning)
+                {
+                    this.IsRunning = false;
+                    this.SpeechSynthesizer.SpeakAsyncCancelAll();
+                }
+            }
+        }
+
+        private void SpeechSynthesizer_SpeakStarted(object sender, SpeakStartedEventArgs e)
+        {
+            this.orginalText = this.Text;
+        }
+
+        private void SpeechSynthesizer_SpeakProgress(object sender, SpeakProgressEventArgs e)
+        {
+            this.CurrentText = e.Text;
+            this.Position = e.CharacterPosition;
+            this.Text = this.text.Substring(0, e.CharacterPosition).ToUpper() + this.text.Substring(e.CharacterPosition, this.text.Length - e.CharacterPosition);
+        }
+
+        private void SpeechSynthesizer_SpeakCompleted(object sender, SpeakCompletedEventArgs e)
+        {
+            this.IsRunning = false;
+            this.CurrentText = null;
+            this.Position = 0;
+            this.Text = this.orginalText;
         }
     }
 }

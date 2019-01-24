@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:TTS"
         xmlns:vm="clr-namespace:TTS.ViewModel"
         xmlns:c="clr-namespace:TTS.Converter"
+        xmlns:e="clr-namespace:TTS.Extension"
         mc:Ignorable="d"
         Title="TTS" Height="450" Width="800">
     <Window.Resources>
@@ -34,6 +35,10 @@
                 <ColumnDefinition Width="2*" />
                 <ColumnDefinition Width="4*" />
             </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="12*"></RowDefinition>
+                <RowDefinition Height="*"></RowDefinition>
+            </Grid.RowDefinitions>
             <Grid Column="0" Margin="10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -66,11 +71,24 @@
                     <Button Margin="8" Grid.Column="1" Command="{Binding Path=PauseCommand}" Content="{Binding Path=IsRunning, Mode=TwoWay, Converter={StaticResource IsRunningToStringConverter}}"></Button>
                     <Button Margin="8" Grid.Column="2" Command="{Binding Path=StopCommand}">Stop</Button>
                 </Grid>
+            </Grid>
 
-            </Grid>
             <Grid Column="1" Margin="10">
-                <TextBox Text="{Binding Path=Text, Mode=TwoWay}" TextWrapping="Wrap" AcceptsReturn="True" AcceptsTab="True"></TextBox>
+                <TextBox x:Name="TextBox" Text="{Binding Path=Text, Mode=TwoWay}" TextWrapping="Wrap" AcceptsReturn="True" AcceptsTab="True" 
+                         e:FocusExtension.IsFocused="{Binding Path=IsRunning, Mode=OneWay}" />
             </Grid>
+
+            <StatusBar Grid.Row="1" Grid.ColumnSpan="2">
+                <StatusBarItem>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Current text: "></TextBlock>
+                        <TextBlock Width="100" Name="CurrentText" Text="{Binding Path=CurrentText, Mode=OneWay}" FontWeight="Bold"></TextBlock>
+                    </StackPanel>
+                </StatusBarItem>
+                <StatusBarItem>
+                    <ProgressBar Width="100" Height="15"  Minimum ="0" Maximum="{Binding Path=Text.Length, Mode=OneWay}" Value="{Binding Path=Position, Mode=OneWay}"></ProgressBar>
+                </StatusBarItem>
+            </StatusBar>
         </Grid>
     </DockPanel>
 </Window>
