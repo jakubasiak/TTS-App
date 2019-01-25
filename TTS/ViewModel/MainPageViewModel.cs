@@ -246,7 +246,8 @@ namespace TTS.ViewModel
         {
             this.CurrentText = e.Text;
             this.Position = e.CharacterPosition;
-            this.Text = this.text.Substring(0, e.CharacterPosition).ToUpper() + this.text.Substring(e.CharacterPosition, this.text.Length - e.CharacterPosition);
+            //this.Text = this.text.Substring(0, e.CharacterPosition).ToUpper() + this.text.Substring(e.CharacterPosition, this.text.Length - e.CharacterPosition);
+            this.Text = this.orginalText.Substring(0, e.CharacterPosition) + this.orginalText.Substring(e.CharacterPosition, e.CharacterCount).ToUpper() + this.text.Substring(e.CharacterPosition + e.CharacterCount, this.text.Length - e.CharacterPosition - e.CharacterCount);
         }
 
         private void SpeechSynthesizer_SpeakCompleted(object sender, SpeakCompletedEventArgs e)
