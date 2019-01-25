@@ -188,9 +188,11 @@ namespace TTS.ViewModel
                         x =>
                         {
                             this.IsRunning = false;
+                            this.SpeechSynthesizer.Resume();
                             this.SpeechSynthesizer.SpeakAsyncCancelAll();
                             this.CurrentText = null;
                             this.Position = 0;
+                            this.Text = this.orginalText;
                         }
                     );
                 return this.stopCommand;
