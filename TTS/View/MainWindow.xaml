@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:TTS"
+        xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
         xmlns:vm="clr-namespace:TTS.ViewModel"
         xmlns:c="clr-namespace:TTS.Converter"
         xmlns:e="clr-namespace:TTS.Extension"
@@ -20,6 +20,12 @@
         <Menu DockPanel.Dock="Top">
 
             <MenuItem Header="_File">
+                <MenuItem Header="New" Command="{Binding NewDocumentCommand}"/>
+                <MenuItem Header="Open" Command="{Binding LoadDuctSystem}"/>
+                <Separator/>
+                <MenuItem Header="Save" Command="{Binding SaveDocumentCommand}"/>
+                <MenuItem Header="Save As..." Command="{Binding SaveAsDocumentCommand}"/>
+                <Separator/>
                 <MenuItem Header="_Close" Command="{Binding WindowCloseCommand}" 
                               CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}" />
             </MenuItem>
@@ -73,20 +79,33 @@
                 </Grid>
             </Grid>
 
-            <Grid Column="1" Margin="10">
+            <Grid Grid.Column="1" Grid.Row="0" Margin="10">
                 <TextBox x:Name="TextBox" Text="{Binding Path=Text, Mode=TwoWay}" TextWrapping="Wrap" AcceptsReturn="True" AcceptsTab="True" 
-                         e:FocusExtension.IsFocused="{Binding Path=IsRunning, Mode=OneWay}" />
+                         e:FocusExtension.IsFocused="{Binding Path=IsRunning, Mode=OneWay}" >
+                    <i:Interaction.Triggers>
+                        <i:EventTrigger EventName="SelectionChanged">
+                            <i:InvokeCommandAction Command="{Binding Path=SetCursorCommand}"
+                                                   CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type TextBox}}}"></i:InvokeCommandAction>
+                        </i:EventTrigger>
+                    </i:Interaction.Triggers>
+                </TextBox>
             </Grid>
 
-            <StatusBar Grid.Row="1" Grid.ColumnSpan="2">
+            <StatusBar Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
                 <StatusBarItem>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="Current text: "></TextBlock>
-                        <TextBlock Width="100" Name="CurrentText" Text="{Binding Path=CurrentText, Mode=OneWay}" FontWeight="Bold"></TextBlock>
+                        <TextBlock Width="100" Name="CurrentText" Text="{Binding Path=CurrentReadedText, Mode=OneWay}" FontWeight="Bold"></TextBlock>
                     </StackPanel>
                 </StatusBarItem>
                 <StatusBarItem>
-                    <ProgressBar Width="100" Height="15"  Minimum ="0" Maximum="{Binding Path=Text.Length, Mode=OneWay}" Value="{Binding Path=Position, Mode=OneWay}"></ProgressBar>
+                    <ProgressBar Width="100" Height="15"  Minimum ="0" Maximum="{Binding Path=Text.Length, Mode=OneWay}" Value="{Binding Path=CharacterPosition, Mode=OneWay}"></ProgressBar>
+                </StatusBarItem>
+                <StatusBarItem>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Caret Index: "></TextBlock>
+                        <TextBlock Width="100" Name="CaretIndex" Text="{Binding Path=CaretIndex, Mode=OneWay}" FontWeight="Bold"></TextBlock>
+                    </StackPanel>
                 </StatusBarItem>
             </StatusBar>
         </Grid>

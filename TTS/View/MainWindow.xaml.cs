@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using TTS.ViewModel;
 
 namespace TTS
 {
@@ -22,7 +23,9 @@ namespace TTS
     {
         public MainWindow()
         {
-            InitializeComponent();
+            this.InitializeComponent();
+            ((MainPageViewModel) this.DataContext).TextBox = this.TextBox;
         }
+
     }
 }

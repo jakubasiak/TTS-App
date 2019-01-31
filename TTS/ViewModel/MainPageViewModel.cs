@@ -24,11 +24,13 @@ namespace TTS.ViewModel
             this.Voices = this.SpeechSynthesizer.GetInstalledVoices().Select(v => v.VoiceInfo.Name).ToList();
             this.selectedVoice = this.Voices.FirstOrDefault();
             this.IsRunning = false;
-            this.Position = 0; 
+            this.CharacterPosition = 0; 
             this.SpeechSynthesizer.SpeakCompleted += this.SpeechSynthesizer_SpeakCompleted;
             this.SpeechSynthesizer.SpeakProgress += this.SpeechSynthesizer_SpeakProgress;
             this.SpeechSynthesizer.SpeakStarted += this.SpeechSynthesizer_SpeakStarted;
         }
+
+        public System.Windows.Controls.TextBox TextBox { get; set; }
 
         private SpeechSynthesizer speechSynthesizer;
         public SpeechSynthesizer SpeechSynthesizer
@@ -98,29 +100,49 @@ namespace TTS.ViewModel
             }
         }
 
-        string currentText;
-        public string CurrentText
+        string currentReadedReadedText;
+        public string CurrentReadedText
         {
-            get => this.currentText;
+            get => this.currentReadedReadedText;
             set
             {
-                this.currentText = value;
-                this.OnPropertyChanged(nameof(this.CurrentText));
+                this.currentReadedReadedText = value;
+                this.OnPropertyChanged(nameof(this.CurrentReadedText));
             }
         }
 
-        int position;
-        public int Position
+        int characterPosition;
+        public int CharacterPosition
         {
-            get => this.position;
+            get => this.characterPosition;
             set
             {
-                this.position = value;
-                this.OnPropertyChanged(nameof(this.Position));
+                this.characterPosition = value;
+                this.OnPropertyChanged(nameof(this.CharacterPosition));
+            }
+        }
+
+        int caretIndex;
+        public int CaretIndex
+        {
+            get => this.caretIndex;
+            set
+            {
+                this.caretIndex = value;
+                this.OnPropertyChanged(nameof(this.CaretIndex));
             }
         }
 
         private string orginalText;
+        public string OrginalText
+        {
+            get => this.orginalText;
+            set
+            {
+                this.orginalText = value;
+                this.OnPropertyChanged(nameof(this.OrginalText));
+            }
+        }
 
         string text;
         public string Text
@@ -142,10 +164,11 @@ namespace TTS.ViewModel
                     this.playCommand = new RelayCommand(
                         x =>
                         {
+                            this.OrginalText = this.Text;
                             this.SpeechSynthesizer.Rate = this.Rate;
                             this.SpeechSynthesizer.Volume = this.Volume;
                             this.IsRunning = true;
-                            this.SpeechSynthesizer.SpeakAsync(this.Text);
+                            this.SpeechSynthesizer.SpeakAsync(this.OrginalText.Substring(this.CaretIndex));
                         }
                     );
                 return this.playCommand;
@@ -187,12 +210,8 @@ namespace TTS.ViewModel
                     this.stopCommand = new RelayCommand(
                         x =>
                         {
-                            this.IsRunning = false;
                             this.SpeechSynthesizer.Resume();
                             this.SpeechSynthesizer.SpeakAsyncCancelAll();
-                            this.CurrentText = null;
-                            this.Position = 0;
-                            this.Text = this.orginalText;
                         }
                     );
                 return this.stopCommand;
@@ -216,6 +235,96 @@ namespace TTS.ViewModel
             }
         }
 
+        //private ICommand newDocumentCommand;
+        //public ICommand NewDocumentCommand
+        //{
+        //    get
+        //    {
+        //        if (this.newDocumentCommand == null)
+        //            this.newDocumentCommand = new RelayCommand(
+        //                x =>
+        //                {
+        //                    //TODO
+        //                }
+        //            );
+
+        //        return this.newDocumentCommand;
+        //    }
+        //}
+
+        //private ICommand loadDuctSystem;
+        //public ICommand LoadDuctSystem
+        //{
+        //    get
+        //    {
+        //        if (this.loadDuctSystem == null)
+        //            this.loadDuctSystem = new RelayCommand(
+        //                x =>
+        //                {
+        //                    //TODO
+        //                }
+        //            );
+
+        //        return this.loadDuctSystem;
+        //    }
+        //}
+
+        //private ICommand saveDocumentCommand;
+        //public ICommand SaveDocumentCommand
+        //{
+        //    get
+        //    {
+        //        if (this.saveDocumentCommand == null)
+        //            this.saveDocumentCommand = new RelayCommand(
+        //                x =>
+        //                {
+        //                    //TODO
+        //                }
+        //            );
+
+        //        return this.saveDocumentCommand;
+        //    }
+        //}
+
+        //private ICommand saveAsDocumentCommand;
+        //public ICommand SaveAsDocumentCommand
+        //{
+        //    get
+        //    {
+        //        if (this.saveAsDocumentCommand == null)
+        //            this.saveAsDocumentCommand = new RelayCommand(
+        //                x =>
+        //                {
+        //                    //TODO
+        //                }
+        //            );
+
+        //        return this.saveAsDocumentCommand;
+        //    }
+        //}
+
+        
+        private ICommand setCursorCommand;
+        public ICommand SetCursorCommand
+        {
+            get
+            {
+                if (this.setCursorCommand == null)
+                    this.setCursorCommand = new RelayCommand(
+                        x =>
+                        {
+                            if (this.TextBox != null && !this.IsRunning)
+                            {
+                                var m = Mouse.GetPosition(this.TextBox);
+                                var index = this.TextBox.GetCharacterIndexFromPoint(m, false);
+                                this.CaretIndex = index >= 0 ? index : this.CaretIndex;
+                            }
+                        }
+                    );
+
+                return this.setCursorCommand;
+            }
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -244,18 +353,20 @@ namespace TTS.ViewModel
 
         private void SpeechSynthesizer_SpeakProgress(object sender, SpeakProgressEventArgs e)
         {
-            this.CurrentText = e.Text;
-            this.Position = e.CharacterPosition;
-            //this.Text = this.text.Substring(0, e.CharacterPosition).ToUpper() + this.text.Substring(e.CharacterPosition, this.text.Length - e.CharacterPosition);
-            this.Text = this.orginalText.Substring(0, e.CharacterPosition) + this.orginalText.Substring(e.CharacterPosition, e.CharacterCount).ToUpper() + this.text.Substring(e.CharacterPosition + e.CharacterCount, this.text.Length - e.CharacterPosition - e.CharacterCount);
+            this.CharacterPosition = this.CaretIndex + e.CharacterPosition;
+            this.CurrentReadedText = e.Text;
+            this.TextBox.Focus();
+            this.TextBox.Select(this.CaretIndex + e.CharacterPosition, e.CharacterCount);          
         }
 
         private void SpeechSynthesizer_SpeakCompleted(object sender, SpeakCompletedEventArgs e)
         {
-            this.IsRunning = false;
-            this.CurrentText = null;
-            this.Position = 0;
+            this.CurrentReadedText = null;
+            this.CharacterPosition = 0;
             this.Text = this.orginalText;
+            this.TextBox.Focus();
+            this.TextBox.Select(this.CaretIndex, 0);
+            this.IsRunning = false;
         }
     }
 }
