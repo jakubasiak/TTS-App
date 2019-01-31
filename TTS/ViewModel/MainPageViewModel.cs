@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Speech.Synthesis;
@@ -9,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using Microsoft.Win32;
 using TTS.Annotations;
 using TTS.Command;
 
@@ -20,7 +22,7 @@ namespace TTS.ViewModel
         {
             this.Rate = 0;
             this.Volume = 50;
-            this.Text = "Twoja stara klaszcze u rubika. To jest zdanie testowe 1. To jest zdanie testowe 2. To jest jeszcze dłuższe zdanie testowe, które pozwoli mi na przetestowanie wielu funkcjonalności.";
+            //this.Text = "Twoja stara klaszcze u rubika. To jest zdanie testowe 1. To jest zdanie testowe 2. To jest jeszcze dłuższe zdanie testowe, które pozwoli mi na przetestowanie wielu funkcjonalności.";
             this.Voices = this.SpeechSynthesizer.GetInstalledVoices().Select(v => v.VoiceInfo.Name).ToList();
             this.selectedVoice = this.Voices.FirstOrDefault();
             this.IsRunning = false;
@@ -31,6 +33,8 @@ namespace TTS.ViewModel
         }
 
         public System.Windows.Controls.TextBox TextBox { get; set; }
+
+        public string FilePath { get; set; }
 
         private SpeechSynthesizer speechSynthesizer;
         public SpeechSynthesizer SpeechSynthesizer
@@ -108,6 +112,17 @@ namespace TTS.ViewModel
             {
                 this.currentReadedReadedText = value;
                 this.OnPropertyChanged(nameof(this.CurrentReadedText));
+            }
+        }
+
+        float readProgress;
+        public float ReadProgress
+        {
+            get => this.readProgress;
+            set
+            {
+                this.readProgress = value;
+                this.OnPropertyChanged(nameof(this.ReadProgress));
             }
         }
 
@@ -235,75 +250,157 @@ namespace TTS.ViewModel
             }
         }
 
-        //private ICommand newDocumentCommand;
-        //public ICommand NewDocumentCommand
-        //{
-        //    get
-        //    {
-        //        if (this.newDocumentCommand == null)
-        //            this.newDocumentCommand = new RelayCommand(
-        //                x =>
-        //                {
-        //                    //TODO
-        //                }
-        //            );
+        private ICommand newDocumentCommand;
+        public ICommand NewDocumentCommand
+        {
+            get
+            {
+                if (this.newDocumentCommand == null)
+                    this.newDocumentCommand = new RelayCommand(
+                        x =>
+                        {
+                            this.Text = string.Empty;
+                            this.OrginalText = string.Empty;
+                            this.SpeechSynthesizer.SpeakAsyncCancelAll();
+                            this.selectedVoice = this.Voices.FirstOrDefault();
+                            this.IsRunning = false;
+                            this.CharacterPosition = 0;
+                            this.ReadProgress = this.CalculateProgress();
+                        }
+                    );
 
-        //        return this.newDocumentCommand;
-        //    }
-        //}
+                return this.newDocumentCommand;
+            }
+        }
 
-        //private ICommand loadDuctSystem;
-        //public ICommand LoadDuctSystem
-        //{
-        //    get
-        //    {
-        //        if (this.loadDuctSystem == null)
-        //            this.loadDuctSystem = new RelayCommand(
-        //                x =>
-        //                {
-        //                    //TODO
-        //                }
-        //            );
+        private ICommand openDuumentCommand;
+        public ICommand OpenDuumentCommand
+        {
+            get
+            {
+                if (this.openDuumentCommand == null)
+                    this.openDuumentCommand = new RelayCommand(
+                        x =>
+                        {
+                            OpenFileDialog ofd = new OpenFileDialog();
+                            ofd.Multiselect = false;
+                            ofd.DefaultExt = ".txt";
+                            ofd.Filter = "Text files|*.txt| RTF files|*.rtf";
+                            ofd.Title = "Open document";
 
-        //        return this.loadDuctSystem;
-        //    }
-        //}
+                             ofd.ShowDialog();
 
-        //private ICommand saveDocumentCommand;
-        //public ICommand SaveDocumentCommand
-        //{
-        //    get
-        //    {
-        //        if (this.saveDocumentCommand == null)
-        //            this.saveDocumentCommand = new RelayCommand(
-        //                x =>
-        //                {
-        //                    //TODO
-        //                }
-        //            );
+                            if (!string.IsNullOrEmpty(ofd.FileName))
+                            {
+                                this.FilePath = ofd.FileName;
+                                using (var fileStream = new FileStream(ofd.FileName, FileMode.Open, FileAccess.Read))
+                                {
+                                    using (var streamReader = new StreamReader(fileStream, Encoding.UTF8, true))
+                                    {
+                                        this.Text = streamReader.ReadToEnd();
+                                    }
+                                }
+                            }
+                        }
+                    );
 
-        //        return this.saveDocumentCommand;
-        //    }
-        //}
+                return this.openDuumentCommand;
+            }
+        }
 
-        //private ICommand saveAsDocumentCommand;
-        //public ICommand SaveAsDocumentCommand
-        //{
-        //    get
-        //    {
-        //        if (this.saveAsDocumentCommand == null)
-        //            this.saveAsDocumentCommand = new RelayCommand(
-        //                x =>
-        //                {
-        //                    //TODO
-        //                }
-        //            );
+        private ICommand saveDocumentCommand;
+        public ICommand SaveDocumentCommand
+        {
+            get
+            {
+                if (this.saveDocumentCommand == null)
+                    this.saveDocumentCommand = new RelayCommand(
+                        x =>
+                        {
+                            if (!string.IsNullOrEmpty(this.FilePath))
+                            {
+                                using (var fileStream = new FileStream(this.FilePath, FileMode.OpenOrCreate,
+                                    FileAccess.Write))
+                                {
+                                    using (StreamWriter writer = new StreamWriter(fileStream, Encoding.UTF8))
+                                    {
+                                        writer.Write(this.Text);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                this.SaveAsDocumentCommand.Execute(null);
+                            }
+                        }
+                    );
 
-        //        return this.saveAsDocumentCommand;
-        //    }
-        //}
+                return this.saveDocumentCommand;
+            }
+        }
 
-        
+        private ICommand saveAsDocumentCommand;
+        public ICommand SaveAsDocumentCommand
+        {
+            get
+            {
+                if (this.saveAsDocumentCommand == null)
+                    this.saveAsDocumentCommand = new RelayCommand(
+                        x =>
+                        {
+                            if (FilePath == null)
+                            {
+                                SaveFileDialog sfd = new SaveFileDialog();
+                                sfd.DefaultExt = ".txt";
+                                sfd.Filter = "Text files|*.txt| RTF files|*.rtf";
+                                sfd.Title = "Open document";
+
+                                sfd.ShowDialog();
+
+                                if (!string.IsNullOrEmpty(sfd.FileName))
+                                {
+                                    this.FilePath = sfd.FileName;
+                                    using (var fileStream = new FileStream(sfd.FileName, FileMode.OpenOrCreate,
+                                        FileAccess.Write))
+                                    {
+                                        using (StreamWriter writer = new StreamWriter(fileStream, Encoding.UTF8))
+                                        {
+                                            writer.Write(this.Text);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    );
+
+                return this.saveAsDocumentCommand;
+            }
+        }
+
+        private ICommand aboutCommand;
+        public ICommand AboutCommand
+        {
+            get
+            {
+                if (this.aboutCommand == null)
+                    this.aboutCommand = new RelayCommand(
+                        x =>
+                        {
+                            StringBuilder sb = new StringBuilder();
+                            sb.Append("Author: Jakub Kubasiak");
+                            sb.AppendLine();
+                            sb.Append("e-mail: kubakubasiak@gmail.com");
+                            sb.AppendLine();
+                            sb.Append("website: http://kubakubasiak.wixsite.com/home");
+                            sb.AppendLine();
+                            MessageBox.Show(sb.ToString(), "About", MessageBoxButton.OK, MessageBoxImage.Information);
+                        }
+                    );
+
+                return this.aboutCommand;
+            }
+        }
+
         private ICommand setCursorCommand;
         public ICommand SetCursorCommand
         {
@@ -318,11 +415,29 @@ namespace TTS.ViewModel
                                 var m = Mouse.GetPosition(this.TextBox);
                                 var index = this.TextBox.GetCharacterIndexFromPoint(m, false);
                                 this.CaretIndex = index >= 0 ? index : this.CaretIndex;
+                                this.ReadProgress = this.CalculateProgress();
                             }
                         }
                     );
 
                 return this.setCursorCommand;
+            }
+        }
+
+        private ICommand exportToWavCommand;
+        public ICommand ExportToWavCommand
+        {
+            get
+            {
+                if (this.exportToWavCommand == null)
+                    this.exportToWavCommand = new RelayCommand(
+                        x =>
+                        {
+
+                        }
+                    );
+
+                return this.exportToWavCommand;
             }
         }
 
@@ -355,18 +470,28 @@ namespace TTS.ViewModel
         {
             this.CharacterPosition = this.CaretIndex + e.CharacterPosition;
             this.CurrentReadedText = e.Text;
-            this.TextBox.Focus();
-            this.TextBox.Select(this.CaretIndex + e.CharacterPosition, e.CharacterCount);          
+            this.TextBox.Select(this.CaretIndex + e.CharacterPosition, e.CharacterCount);
+            this.ReadProgress = this.CalculateProgress();
         }
 
         private void SpeechSynthesizer_SpeakCompleted(object sender, SpeakCompletedEventArgs e)
         {
             this.CurrentReadedText = null;
-            this.CharacterPosition = 0;
             this.Text = this.orginalText;
             this.TextBox.Focus();
-            this.TextBox.Select(this.CaretIndex, 0);
+            this.TextBox.Select(this.CharacterPosition, 0);
+            this.CaretIndex = this.CharacterPosition;
             this.IsRunning = false;
+            this.ReadProgress = this.CalculateProgress();
+        }
+
+        private float CalculateProgress()
+        {
+            if (string.IsNullOrEmpty(this.Text))
+                return 0;
+            if(this.IsRunning)
+                return ((float) this.CharacterPosition / this.Text.Length) * 100;
+            return ((float)this.CaretIndex / this.Text.Length) * 100;
         }
     }
 }

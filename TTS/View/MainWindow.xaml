@@ -21,7 +21,7 @@
 
             <MenuItem Header="_File">
                 <MenuItem Header="New" Command="{Binding NewDocumentCommand}"/>
-                <MenuItem Header="Open" Command="{Binding LoadDuctSystem}"/>
+                <MenuItem Header="Open" Command="{Binding OpenDuumentCommand}"/>
                 <Separator/>
                 <MenuItem Header="Save" Command="{Binding SaveDocumentCommand}"/>
                 <MenuItem Header="Save As..." Command="{Binding SaveAsDocumentCommand}"/>
@@ -34,6 +34,12 @@
                 <MenuItem Header="Copy" Command="Copy"/>
                 <MenuItem Header="Paste" Command="Paste"/>
             </MenuItem>
+            <MenuItem Header="Export">
+                <MenuItem Header="Export to .wav" Command="{Binding ExportToWavCommand}"/>
+            </MenuItem>
+            <MenuItem Header="_Help">
+                <MenuItem Header="About" Command="{Binding AboutCommand}"/>
+            </MenuItem>
 
         </Menu>
         <Grid DockPanel.Dock="Bottom">
@@ -42,7 +48,7 @@
                 <ColumnDefinition Width="4*" />
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
-                <RowDefinition Height="12*"></RowDefinition>
+                <RowDefinition Height="13*"></RowDefinition>
                 <RowDefinition Height="*"></RowDefinition>
             </Grid.RowDefinitions>
             <Grid Column="0" Margin="10">
@@ -80,8 +86,9 @@
             </Grid>
 
             <Grid Grid.Column="1" Grid.Row="0" Margin="10">
-                <TextBox x:Name="TextBox" Text="{Binding Path=Text, Mode=TwoWay}" TextWrapping="Wrap" AcceptsReturn="True" AcceptsTab="True" 
-                         e:FocusExtension.IsFocused="{Binding Path=IsRunning, Mode=OneWay}" >
+                <TextBox x:Name="TextBox" Text="{Binding Path=Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" AcceptsReturn="True" AcceptsTab="True" 
+                         e:FocusExtension.IsFocused="{Binding Path=IsRunning, Mode=OneWay}"
+                         VerticalScrollBarVisibility="Auto">
                     <i:Interaction.Triggers>
                         <i:EventTrigger EventName="SelectionChanged">
                             <i:InvokeCommandAction Command="{Binding Path=SetCursorCommand}"
@@ -94,19 +101,28 @@
             <StatusBar Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
                 <StatusBarItem>
                     <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Caret Index: "></TextBlock>
+                        <TextBlock Width="50" Name="CaretIndex" Text="{Binding Path=CaretIndex, Mode=OneWay}" FontWeight="Bold"></TextBlock>
+                    </StackPanel>
+                </StatusBarItem>
+                <StatusBarItem>
+                    <StackPanel Orientation="Horizontal">
                         <TextBlock Text="Current text: "></TextBlock>
                         <TextBlock Width="100" Name="CurrentText" Text="{Binding Path=CurrentReadedText, Mode=OneWay}" FontWeight="Bold"></TextBlock>
                     </StackPanel>
                 </StatusBarItem>
                 <StatusBarItem>
-                    <ProgressBar Width="100" Height="15"  Minimum ="0" Maximum="{Binding Path=Text.Length, Mode=OneWay}" Value="{Binding Path=CharacterPosition, Mode=OneWay}"></ProgressBar>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Progress: "></TextBlock>
+                        <ProgressBar Grid.Column="1" Name="ProgressBar" Width="100" Height="15"  Minimum ="0" Maximum="100" Value="{Binding Path=ReadProgress, Mode=OneWay}"></ProgressBar>
+                        <TextBlock Grid.Column="1" Text="{Binding  Path=ReadProgress, StringFormat={}{0:0}%}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Grid>
                 </StatusBarItem>
-                <StatusBarItem>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Caret Index: "></TextBlock>
-                        <TextBlock Width="100" Name="CaretIndex" Text="{Binding Path=CaretIndex, Mode=OneWay}" FontWeight="Bold"></TextBlock>
-                    </StackPanel>
-                </StatusBarItem>
+
             </StatusBar>
         </Grid>
     </DockPanel>
