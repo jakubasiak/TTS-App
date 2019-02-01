@@ -62,6 +62,17 @@ namespace TTS.ViewModel
             }
         }
 
+        bool isPause;
+        public bool IsPause
+        {
+            get => this.isPause;
+            set
+            {
+                this.isPause = value;
+                this.OnPropertyChanged(nameof(this.IsPause));
+            }
+        }
+
         int volume;
         public int Volume
         {
@@ -201,14 +212,16 @@ namespace TTS.ViewModel
                     this.pauseCommand = new RelayCommand(
                         x =>
                         {
-                            if (this.IsRunning)
+                            if (this.IsRunning && !this.IsPause)
                             {
                                 this.IsRunning = false;
+                                this.IsPause = true;
                                 this.SpeechSynthesizer.Pause();
                             }
                             else
                             {
                                 this.IsRunning = true;
+                                this.IsPause = false;
                                 this.SpeechSynthesizer.Resume();
                             }
 
@@ -446,20 +459,17 @@ namespace TTS.ViewModel
 
                             if (!string.IsNullOrEmpty(sfd.FileName))
                             {
-
                                 this.OrginalText = this.Text;
                                 this.SpeechSynthesizer.Rate = this.Rate;
                                 this.SpeechSynthesizer.Volume = this.Volume;
                                 this.SpeechSynthesizer.SetOutputToWaveFile(sfd.FileName);
                                 this.IsRunning = true;
-                                ;
 
                                 while (this.SpeechSynthesizer.SpeakAsync(this.OrginalText.Substring(this.CaretIndex)).IsCompleted)
                                 {
                                     this.SpeechSynthesizer.SetOutputToDefaultAudioDevice();
                                     this.IsRunning = false;
-                                }
-                               
+                                }                              
                             }
                         }
                     );
