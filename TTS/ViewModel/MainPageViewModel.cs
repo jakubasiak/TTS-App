@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Microsoft.Win32;
+using NAudio.Lame;
+using NAudio.Wave;
 using TTS.Annotations;
 using TTS.Command;
 
@@ -353,7 +355,8 @@ namespace TTS.ViewModel
                                 SaveFileDialog sfd = new SaveFileDialog();
                                 sfd.DefaultExt = ".txt";
                                 sfd.Filter = "Text files|*.txt| RTF files|*.rtf";
-                                sfd.Title = "Open document";
+                                sfd.Title = "Save document";
+                                sfd.FileName = "Document1";
 
                                 sfd.ShowDialog();
 
@@ -433,7 +436,31 @@ namespace TTS.ViewModel
                     this.exportToWavCommand = new RelayCommand(
                         x =>
                         {
+                            SaveFileDialog sfd = new SaveFileDialog();
+                            sfd.DefaultExt = ".wav";
+                            sfd.Filter = "Wav files|*.wav";
+                            sfd.Title = "Save to file";
+                            sfd.FileName = "Track1";
 
+                            sfd.ShowDialog();
+
+                            if (!string.IsNullOrEmpty(sfd.FileName))
+                            {
+
+                                this.OrginalText = this.Text;
+                                this.SpeechSynthesizer.Rate = this.Rate;
+                                this.SpeechSynthesizer.Volume = this.Volume;
+                                this.SpeechSynthesizer.SetOutputToWaveFile(sfd.FileName);
+                                this.IsRunning = true;
+                                ;
+
+                                while (this.SpeechSynthesizer.SpeakAsync(this.OrginalText.Substring(this.CaretIndex)).IsCompleted)
+                                {
+                                    this.SpeechSynthesizer.SetOutputToDefaultAudioDevice();
+                                    this.IsRunning = false;
+                                }
+                               
+                            }
                         }
                     );
 
@@ -458,6 +485,19 @@ namespace TTS.ViewModel
                     this.IsRunning = false;
                     this.SpeechSynthesizer.SpeakAsyncCancelAll();
                 }
+            }
+        }
+
+        public static void ConvertWavStreamToMp3File(ref MemoryStream ms, string savetofilename)
+        {
+            //rewind to beginning of stream
+            ms.Seek(0, SeekOrigin.Begin);
+
+            using (var retMs = new MemoryStream())
+            using (var rdr = new WaveFileReader(ms))
+            using (var wtr = new LameMP3FileWriter(savetofilename, rdr.WaveFormat, LAMEPreset.VBR_90))
+            {
+                rdr.CopyTo(wtr);
             }
         }
 
