@@ -28,7 +28,7 @@ namespace TTS.ViewModel
             this.Voices = this.SpeechSynthesizer.GetInstalledVoices().Select(v => v.VoiceInfo.Name).ToList();
             this.selectedVoice = this.Voices.FirstOrDefault();
             this.IsRunning = false;
-            this.CharacterPosition = 0; 
+            this.CharacterPosition = 0;
             this.SpeechSynthesizer.SpeakCompleted += this.SpeechSynthesizer_SpeakCompleted;
             this.SpeechSynthesizer.SpeakProgress += this.SpeechSynthesizer_SpeakProgress;
             this.SpeechSynthesizer.SpeakStarted += this.SpeechSynthesizer_SpeakStarted;
@@ -203,6 +203,35 @@ namespace TTS.ViewModel
             }
         }
 
+        private ICommand playClipboardCommand;
+        public ICommand PlayClipboardCommand
+        {
+            get
+            {
+                if (this.playClipboardCommand == null)
+                    this.playClipboardCommand = new RelayCommand(
+                        x =>
+                        {
+                            var textToRead = x as string;
+                            if (!string.IsNullOrEmpty(textToRead))
+                            {
+                                var sp = new SpeechSynthesizer();
+                                sp.Rate = this.Rate;
+                                sp.Volume = this.Volume;
+                                sp.SelectVoice(this.SelectedVoice);
+                                sp.SetOutputToDefaultAudioDevice();
+                                sp.SpeakAsync(textToRead);
+                                sp.SpeakCompleted += (sender, args) =>
+                                {
+                                    sp.Dispose();
+                                };
+                            }
+                        }
+                    );
+                return this.playClipboardCommand;
+            }
+        }
+
         private ICommand pauseCommand;
         public ICommand PauseCommand
         {
@@ -303,7 +332,7 @@ namespace TTS.ViewModel
                             ofd.Filter = "Text files|*.txt| RTF files|*.rtf";
                             ofd.Title = "Open document";
 
-                             ofd.ShowDialog();
+                            ofd.ShowDialog();
 
                             if (!string.IsNullOrEmpty(ofd.FileName))
                             {
@@ -469,7 +498,7 @@ namespace TTS.ViewModel
                                 {
                                     this.SpeechSynthesizer.SetOutputToDefaultAudioDevice();
                                     this.IsRunning = false;
-                                }                              
+                                }
                             }
                         }
                     );
@@ -539,8 +568,8 @@ namespace TTS.ViewModel
         {
             if (string.IsNullOrEmpty(this.Text))
                 return 0;
-            if(this.IsRunning)
-                return ((float) this.CharacterPosition / this.Text.Length) * 100;
+            if (this.IsRunning)
+                return ((float)this.CharacterPosition / this.Text.Length) * 100;
             return ((float)this.CaretIndex / this.Text.Length) * 100;
         }
     }
