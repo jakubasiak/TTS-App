@@ -137,6 +137,12 @@
   <ItemGroup>
     <Resource Include="Assets\sound.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\speaker.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\speaker.ico" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\NAudio.Lame.1.0.9\build\NAudio.Lame.targets" Condition="Exists('..\packages\NAudio.Lame.1.0.9\build\NAudio.Lame.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

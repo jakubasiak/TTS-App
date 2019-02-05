@@ -10,7 +10,7 @@
         xmlns:controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
         mc:Ignorable="d"
         Title="TTS" Height="450" Width="800"
-        Icon="../Assets/sound.ico"
+        Icon="../Assets/speaker.ico"
         IconScalingMode="ScaleDownLargerFrame"
         ShowIconOnTitleBar="True" 
         StateChanged="MainWindow_OnStateChanged"
