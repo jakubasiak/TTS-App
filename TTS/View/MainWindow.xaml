@@ -17,7 +17,8 @@
         Closed="MainWindow_OnClosed">
     <Window.Resources>
         <vm:MainPageViewModel x:Key="MainPageViewModel" />
-        <c:IsRunningToStringConverter x:Key="IsRunningToStringConverter" />
+        <c:ApplicationStateToStringConverter x:Key="ApplicationStateToStringConverter" />
+        <c:ApplicationStateToBoolConverter x:Key="ApplicationStateToBoolConverter" />
     </Window.Resources>
     <Window.DataContext>
         <vm:MainPageViewModel/>
@@ -43,7 +44,7 @@
             <MenuItem Header="Action">
                 <MenuItem Header="Read clipboard" Command="{Binding ReadFromClipboardCommand}" InputGestureText="Ctrl+Q"/>
                 <Separator/>
-                <MenuItem Header="{Binding Path=IsRunning, Mode=TwoWay, Converter={StaticResource IsRunningToStringConverter}}" Command="{Binding ReadCommand}"/>
+                <MenuItem Header="{Binding Path=ApplicationState, Mode=TwoWay, Converter={StaticResource ApplicationStateToStringConverter}}" Command="{Binding ReadCommand}"/>
                 <MenuItem Header="Stop" Command="{Binding StopCommand}"/>
             </MenuItem>
             <MenuItem Header="Export">
@@ -93,7 +94,7 @@
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
                     <Button Margin="5" Grid.Column="0" Command="{Binding Path=ReadCommand}" 
-                            Content="{Binding Path=IsRunning, Mode=TwoWay, Converter={StaticResource IsRunningToStringConverter}}"
+                            Content="{Binding Path=ApplicationState, Mode=TwoWay, Converter={StaticResource ApplicationStateToStringConverter}}"
                             Height="30" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center"></Button>
                     <Button Margin="5" Grid.Column="1" Command="{Binding Path=StopCommand}"
                             Height="30" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center">Stop</Button>
@@ -102,7 +103,7 @@
 
             <Grid Grid.Column="1" Grid.Row="0" Margin="10">
                 <TextBox x:Name="TextBox" Text="{Binding Path=Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" AcceptsReturn="True" AcceptsTab="True" 
-                         e:FocusExtension.IsFocused="{Binding Path=IsRunning, Mode=OneWay}"
+                         e:FocusExtension.IsFocused="{Binding Path=ApplicationState, Mode=OneWay, Converter={StaticResource ApplicationStateToBoolConverter}}"
                          VerticalScrollBarVisibility="Auto">
                     <i:Interaction.Triggers>
                         <i:EventTrigger EventName="SelectionChanged">

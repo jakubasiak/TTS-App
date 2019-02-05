@@ -51,6 +51,7 @@ namespace TTS
             {
                 BalloonTipTitle = Properties.Resources.MainWindow_MainWindow_Tip_Title,
                 BalloonTipText = Properties.Resources.MainWindow_MainWindow_Tip_Text,
+                Text = Properties.Resources.MainWindow_MainWindow_Tip_Title,
                 Icon = new System.Drawing.Icon(@"../../Assets/sound.ico", new System.Drawing.Size(16, 16)),
                 Visible = true
             };
@@ -111,6 +112,8 @@ namespace TTS
         {
             this.HotKeyManager.Unregister(this.ReadClipboardHotKey);
             this.HotKeyManager.Dispose();
+            this.notifyIcon.Dispose();
+            ((MainPageViewModel)this.DataContext).WindowCloseCommand.Execute(this);
         }
     }
 }

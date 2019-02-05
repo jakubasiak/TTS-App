@@ -22,11 +22,11 @@ namespace TTS.ViewModel
     {
         public MainPageViewModel()
         {
-            this.Rate = 0;
-            this.Volume = 50;
+            this.Rate = Properties.Settings.Default.Rate;
+            this.Volume = Properties.Settings.Default.Volume;
             this.Voices = this.SpeechSynthesizer.GetInstalledVoices().Select(v => v.VoiceInfo.Name).ToList();
-            this.selectedVoice = this.Voices.FirstOrDefault();
-            this.IsRunning = false;
+            this.SelectedVoice = string.IsNullOrEmpty(Properties.Settings.Default.SelectedVoice) ? this.Voices.FirstOrDefault() : Properties.Settings.Default.SelectedVoice;
+            this.ApplicationState = ApplicationState.Idle;
             this.CharacterPosition = 0;
             this.SpeechSynthesizer.SpeakCompleted += this.SpeechSynthesizer_SpeakCompleted;
             this.SpeechSynthesizer.SpeakProgress += this.SpeechSynthesizer_SpeakProgress;
@@ -64,25 +64,14 @@ namespace TTS.ViewModel
             }
         }
 
-        bool isRunning;
-        public bool IsRunning
+        ApplicationState applicationState;
+        public ApplicationState ApplicationState
         {
-            get => this.isRunning;
+            get => this.applicationState;
             set
             {
-                this.isRunning = value;
-                this.OnPropertyChanged(nameof(this.IsRunning));
-            }
-        }
-
-        bool isPause;
-        public bool IsPause
-        {
-            get => this.isPause;
-            set
-            {
-                this.isPause = value;
-                this.OnPropertyChanged(nameof(this.IsPause));
+                this.applicationState = value;
+                this.OnPropertyChanged(nameof(this.ApplicationState));
             }
         }
 
@@ -205,27 +194,25 @@ namespace TTS.ViewModel
                     this.readCommand = new RelayCommand(
                         x =>
                         {
-                            if (!this.IsRunning && !this.IsPause)
+                            if (this.ApplicationState == ApplicationState.Idle)
                             {
-                                if (string.IsNullOrEmpty(this.Text))
+                                if (!string.IsNullOrEmpty(this.Text))
                                 {
                                     this.OrginalText = this.Text;
                                     this.SpeechSynthesizer.Rate = this.Rate;
                                     this.SpeechSynthesizer.Volume = this.Volume;
-                                    this.IsRunning = true;
+                                    this.ApplicationState = ApplicationState.Read;
                                     this.SpeechSynthesizer.SpeakAsync(this.OrginalText.Substring(this.CaretIndex));
                                 }
                             }
-                            if (this.IsRunning)
+                            else if (this.ApplicationState == ApplicationState.Read)
                             {
-                                this.IsRunning = false;
-                                this.IsPause = true;
+                                this.ApplicationState = ApplicationState.Pause;
                                 this.SpeechSynthesizer.Pause();
                             }
-                            if (!this.IsRunning && this.IsPause)
+                            else if (this.ApplicationState == ApplicationState.Pause)
                             {
-                                this.IsRunning = true;
-                                this.IsPause = false;
+                                this.ApplicationState = ApplicationState.Read;
                                 this.SpeechSynthesizer.Resume();
                             }
 
@@ -244,17 +231,14 @@ namespace TTS.ViewModel
                     this.readFromClipboardCommand = new RelayCommand(
                         x =>
                         {
-                            var clipboardSynthezierIsRunning =
-                                this.ClipboardSpeechSynthesizer.State == SynthesizerState.Speaking;
-
-                            if (clipboardSynthezierIsRunning)
+                            if (this.ClipboardSpeechSynthesizer.State == SynthesizerState.Speaking)
                             {
                                 this.ClipboardSpeechSynthesizer.SpeakAsyncCancelAll();
                             }
                             else
                             {
                                 var textToRead = x as string;
-                                if (!string.IsNullOrEmpty(textToRead) && !this.IsRunning && !clipboardSynthezierIsRunning)
+                                if (!string.IsNullOrEmpty(textToRead) && this.ApplicationState == ApplicationState.Idle)
                                 {
                                     this.ClipboardSpeechSynthesizer.Rate = this.Rate;
                                     this.ClipboardSpeechSynthesizer.Volume = this.Volume;
@@ -296,6 +280,11 @@ namespace TTS.ViewModel
                         {
                             this.SpeechSynthesizer.SpeakAsyncCancelAll();
                             this.SpeechSynthesizer.Dispose();
+
+                            Properties.Settings.Default.Volume = this.Volume;
+                            Properties.Settings.Default.Rate = this.Rate;
+                            Properties.Settings.Default.SelectedVoice = this.SelectedVoice;
+                            Properties.Settings.Default.Save();
                             ((Window)x).Close();
                         }
                     );
@@ -317,7 +306,7 @@ namespace TTS.ViewModel
                             this.OrginalText = string.Empty;
                             this.SpeechSynthesizer.SpeakAsyncCancelAll();
                             this.selectedVoice = this.Voices.FirstOrDefault();
-                            this.IsRunning = false;
+                            this.ApplicationState = ApplicationState.Idle;
                             this.CharacterPosition = 0;
                             this.ReadProgress = this.CalculateProgress();
                         }
@@ -446,7 +435,7 @@ namespace TTS.ViewModel
                             sb.AppendLine();
                             sb.Append("e-mail: kubakubasiak@gmail.com");
                             sb.AppendLine();
-                            sb.Append("website: http://kubakubasiak.wixsite.com/home");
+                            sb.Append("github: https://github.com/jakubasiak");
                             sb.AppendLine();
                             MessageBox.Show(sb.ToString(), "About", MessageBoxButton.OK, MessageBoxImage.Information);
                         }
@@ -465,7 +454,7 @@ namespace TTS.ViewModel
                     this.setCursorCommand = new RelayCommand(
                         x =>
                         {
-                            if (this.TextBox != null && !this.IsRunning)
+                            if (!string.IsNullOrEmpty(this.Text) && this.ApplicationState == ApplicationState.Idle)
                             {
                                 var m = Mouse.GetPosition(this.TextBox);
                                 var index = this.TextBox.GetCharacterIndexFromPoint(m, false);
@@ -502,12 +491,12 @@ namespace TTS.ViewModel
                                 this.SpeechSynthesizer.Rate = this.Rate;
                                 this.SpeechSynthesizer.Volume = this.Volume;
                                 this.SpeechSynthesizer.SetOutputToWaveFile(sfd.FileName);
-                                this.IsRunning = true;
+                                this.ApplicationState = ApplicationState.Read;
 
                                 while (this.SpeechSynthesizer.SpeakAsync(this.OrginalText.Substring(this.CaretIndex)).IsCompleted)
                                 {
                                     this.SpeechSynthesizer.SetOutputToDefaultAudioDevice();
-                                    this.IsRunning = false;
+                                    this.ApplicationState = ApplicationState.Idle;
                                 }
                             }
                         }
@@ -529,26 +518,26 @@ namespace TTS.ViewModel
             }
             if (propertyName == nameof(this.Volume) || propertyName == nameof(this.Rate) || propertyName == nameof(this.SelectedVoice))
             {
-                if (this.IsRunning)
+                if (this.ApplicationState == ApplicationState.Read)
                 {
-                    this.IsRunning = false;
+                    this.ApplicationState = ApplicationState.Idle;
                     this.SpeechSynthesizer.SpeakAsyncCancelAll();
                 }
             }
         }
 
-        public static void ConvertWavStreamToMp3File(ref MemoryStream ms, string savetofilename)
-        {
-            //rewind to beginning of stream
-            ms.Seek(0, SeekOrigin.Begin);
+        //public static void ConvertWavStreamToMp3File(ref MemoryStream ms, string savetofilename)
+        //{
+        //    //rewind to beginning of stream
+        //    ms.Seek(0, SeekOrigin.Begin);
 
-            using (var retMs = new MemoryStream())
-            using (var rdr = new WaveFileReader(ms))
-            using (var wtr = new LameMP3FileWriter(savetofilename, rdr.WaveFormat, LAMEPreset.VBR_90))
-            {
-                rdr.CopyTo(wtr);
-            }
-        }
+        //    using (var retMs = new MemoryStream())
+        //    using (var rdr = new WaveFileReader(ms))
+        //    using (var wtr = new LameMP3FileWriter(savetofilename, rdr.WaveFormat, LAMEPreset.VBR_90))
+        //    {
+        //        rdr.CopyTo(wtr);
+        //    }
+        //}
 
         private void SpeechSynthesizer_SpeakStarted(object sender, SpeakStartedEventArgs e)
         {
@@ -570,7 +559,7 @@ namespace TTS.ViewModel
             this.TextBox.Focus();
             this.TextBox.Select(this.CharacterPosition, 0);
             this.CaretIndex = this.CharacterPosition;
-            this.IsRunning = false;
+            this.ApplicationState = ApplicationState.Idle;
             this.ReadProgress = this.CalculateProgress();
         }
 
@@ -578,7 +567,7 @@ namespace TTS.ViewModel
         {
             if (string.IsNullOrEmpty(this.Text))
                 return 0;
-            if (this.IsRunning)
+            if (this.ApplicationState == ApplicationState.Read)
                 return ((float)this.CharacterPosition / this.Text.Length) * 100;
             return ((float)this.CaretIndex / this.Text.Length) * 100;
         }
