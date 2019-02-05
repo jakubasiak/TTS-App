@@ -20,17 +20,20 @@ using Clipboard = System.Windows.Clipboard;
 
 namespace TTS
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : MetroWindow
     {
-        private readonly System.Windows.Forms.NotifyIcon notifyIcon;
+        private System.Windows.Forms.NotifyIcon notifyIcon;
         public MainWindow()
         {
             this.InitializeComponent();
             ((MainPageViewModel) this.DataContext).TextBox = this.TextBox;
+            this.CreateNotifyIconMenu();
 
+
+        }
+
+        private void CreateNotifyIconMenu()
+        {
             this.notifyIcon = new System.Windows.Forms.NotifyIcon
             {
                 BalloonTipTitle = Properties.Resources.MainWindow_MainWindow_Tip_Title,
@@ -50,7 +53,8 @@ namespace TTS
                 Text = Properties.Resources.MainWindow_MainWindow_ReadClipboardCommandTitle
             };
             readclipboardMenuItem.Click += this.ReadclipboardMenuItem_Click;
-            this.notifyIcon.ContextMenuStrip.Items.AddRange(new ToolStripItem[] {readclipboardMenuItem, new ToolStripSeparator(),  closeMenuItem });
+            this.notifyIcon.ContextMenuStrip.Items.AddRange(new ToolStripItem[]
+                {readclipboardMenuItem, new ToolStripSeparator(), closeMenuItem});
         }
 
         private void ReadclipboardMenuItem_Click(object sender, EventArgs e)
