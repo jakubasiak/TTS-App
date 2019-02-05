@@ -13,7 +13,8 @@
         Icon="../Assets/sound.ico"
         IconScalingMode="ScaleDownLargerFrame"
         ShowIconOnTitleBar="True" 
-        StateChanged="MainWindow_OnStateChanged">
+        StateChanged="MainWindow_OnStateChanged"
+        Closed="MainWindow_OnClosed">
     <Window.Resources>
         <vm:MainPageViewModel x:Key="MainPageViewModel" />
         <c:IsRunningToStringConverter x:Key="IsRunningToStringConverter" />
@@ -38,6 +39,12 @@
                 <MenuItem Header="Cut" Command="Cut"/>
                 <MenuItem Header="Copy" Command="Copy"/>
                 <MenuItem Header="Paste" Command="Paste"/>
+            </MenuItem>
+            <MenuItem Header="Action">
+                <MenuItem Header="Read clipboard" Command="{Binding ReadFromClipboardCommand}" InputGestureText="Ctrl+Q"/>
+                <Separator/>
+                <MenuItem Header="{Binding Path=IsRunning, Mode=TwoWay, Converter={StaticResource IsRunningToStringConverter}}" Command="{Binding ReadCommand}"/>
+                <MenuItem Header="Stop" Command="{Binding StopCommand}"/>
             </MenuItem>
             <MenuItem Header="Export">
                 <MenuItem Header="Export to .wav" Command="{Binding ExportToWavCommand}"/>
@@ -84,14 +91,12 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition/>
                         <ColumnDefinition/>
-                        <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
-                    <Button Margin="5" Grid.Column="0" Command="{Binding Path=PlayCommand}" Height="30" Width="70" VerticalAlignment="Center" HorizontalAlignment="Center">Play</Button>
-                    <Button Margin="5" Grid.Column="1" Command="{Binding Path=PauseCommand}" 
+                    <Button Margin="5" Grid.Column="0" Command="{Binding Path=ReadCommand}" 
                             Content="{Binding Path=IsRunning, Mode=TwoWay, Converter={StaticResource IsRunningToStringConverter}}"
-                            Height="30" Width="70" VerticalAlignment="Center" HorizontalAlignment="Center"></Button>
-                    <Button Margin="5" Grid.Column="2" Command="{Binding Path=StopCommand}"
-                            Height="30" Width="70" VerticalAlignment="Center" HorizontalAlignment="Center">Stop</Button>
+                            Height="30" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center"></Button>
+                    <Button Margin="5" Grid.Column="1" Command="{Binding Path=StopCommand}"
+                            Height="30" Width="100" VerticalAlignment="Center" HorizontalAlignment="Center">Stop</Button>
                 </Grid>
             </Grid>
 

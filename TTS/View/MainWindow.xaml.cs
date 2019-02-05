@@ -14,22 +14,35 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using GlobalHotKey;
 using MahApps.Metro.Controls;
 using TTS.ViewModel;
 using Clipboard = System.Windows.Clipboard;
+using HotKey = GlobalHotKey.HotKey;
+using MessageBox = System.Windows.MessageBox;
 
 namespace TTS
 {
     public partial class MainWindow : MetroWindow
     {
         private System.Windows.Forms.NotifyIcon notifyIcon;
+        public HotKeyManager HotKeyManager { get; set; }
+        public HotKey ReadClipboardHotKey { get; set; }
         public MainWindow()
         {
             this.InitializeComponent();
             ((MainPageViewModel) this.DataContext).TextBox = this.TextBox;
             this.CreateNotifyIconMenu();
 
+            this.HotKeyManager = new HotKeyManager();
+            this.ReadClipboardHotKey = this.HotKeyManager.Register(Key.Q, ModifierKeys.Control);
+            this.HotKeyManager.KeyPressed += HotKeyManager_KeyPressed;
+        }
 
+        private void HotKeyManager_KeyPressed(object sender, KeyPressedEventArgs e)
+        {
+            if (e.HotKey.Key == Key.Q)
+                this.PlayClipboard();
         }
 
         private void CreateNotifyIconMenu()
@@ -52,15 +65,20 @@ namespace TTS
             {
                 Text = Properties.Resources.MainWindow_MainWindow_ReadClipboardCommandTitle
             };
-            readclipboardMenuItem.Click += this.ReadclipboardMenuItem_Click;
+            readclipboardMenuItem.Click += this.ReadClipboardMenuItem_Click;
             this.notifyIcon.ContextMenuStrip.Items.AddRange(new ToolStripItem[]
                 {readclipboardMenuItem, new ToolStripSeparator(), closeMenuItem});
         }
 
-        private void ReadclipboardMenuItem_Click(object sender, EventArgs e)
+        private void ReadClipboardMenuItem_Click(object sender, EventArgs e)
+        {
+            this.PlayClipboard();
+        }
+
+        private void PlayClipboard()
         {
             var textToRead = Clipboard.GetText();
-            ((MainPageViewModel)this.DataContext).PlayClipboardCommand.Execute(textToRead);
+            ((MainPageViewModel) this.DataContext).ReadFromClipboardCommand.Execute(textToRead);
         }
 
         private void CloseMenuItem_Click(object sender, EventArgs e)
@@ -87,6 +105,12 @@ namespace TTS
             {
                 this.notifyIcon.Visible = false;
             }
+        }
+
+        private void MainWindow_OnClosed(object sender, EventArgs e)
+        {
+            this.HotKeyManager.Unregister(this.ReadClipboardHotKey);
+            this.HotKeyManager.Dispose();
         }
     }
 }

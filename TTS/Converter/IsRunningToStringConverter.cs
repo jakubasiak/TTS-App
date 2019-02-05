@@ -13,12 +13,11 @@ namespace TTS.Converter
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             var isRunning = (bool)value;
-            return isRunning ? "Pause" : "Resume";
+            return isRunning ?  "Pause" : "Read";
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            //return ((string) value) == "Resume" ? true : false;
             return null;
         }
     }

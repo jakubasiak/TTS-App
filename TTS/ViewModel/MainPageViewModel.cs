@@ -24,7 +24,6 @@ namespace TTS.ViewModel
         {
             this.Rate = 0;
             this.Volume = 50;
-            //this.Text = "Twoja stara klaszcze u rubika. To jest zdanie testowe 1. To jest zdanie testowe 2. To jest jeszcze dłuższe zdanie testowe, które pozwoli mi na przetestowanie wielu funkcjonalności.";
             this.Voices = this.SpeechSynthesizer.GetInstalledVoices().Select(v => v.VoiceInfo.Name).ToList();
             this.selectedVoice = this.Voices.FirstOrDefault();
             this.IsRunning = false;
@@ -32,6 +31,7 @@ namespace TTS.ViewModel
             this.SpeechSynthesizer.SpeakCompleted += this.SpeechSynthesizer_SpeakCompleted;
             this.SpeechSynthesizer.SpeakProgress += this.SpeechSynthesizer_SpeakProgress;
             this.SpeechSynthesizer.SpeakStarted += this.SpeechSynthesizer_SpeakStarted;
+            this.ClipboardSpeechSynthesizer.SetOutputToDefaultAudioDevice();
         }
 
         public System.Windows.Controls.TextBox TextBox { get; set; }
@@ -48,6 +48,19 @@ namespace TTS.ViewModel
                     this.speechSynthesizer = new SpeechSynthesizer();
                 }
                 return this.speechSynthesizer;
+            }
+        }
+
+        private SpeechSynthesizer clipboardSpeechSynthesizer;
+        public SpeechSynthesizer ClipboardSpeechSynthesizer
+        {
+            get
+            {
+                if (this.clipboardSpeechSynthesizer == null)
+                {
+                    this.clipboardSpeechSynthesizer = new SpeechSynthesizer();
+                }
+                return this.clipboardSpeechSynthesizer;
             }
         }
 
@@ -183,71 +196,33 @@ namespace TTS.ViewModel
             }
         }
 
-        private ICommand playCommand;
-        public ICommand PlayCommand
+        private ICommand readCommand;
+        public ICommand ReadCommand
         {
             get
             {
-                if (this.playCommand == null)
-                    this.playCommand = new RelayCommand(
+                if (this.readCommand == null)
+                    this.readCommand = new RelayCommand(
                         x =>
                         {
-                            this.OrginalText = this.Text;
-                            this.SpeechSynthesizer.Rate = this.Rate;
-                            this.SpeechSynthesizer.Volume = this.Volume;
-                            this.IsRunning = true;
-                            this.SpeechSynthesizer.SpeakAsync(this.OrginalText.Substring(this.CaretIndex));
-                        }
-                    );
-                return this.playCommand;
-            }
-        }
-
-        private ICommand playClipboardCommand;
-        public ICommand PlayClipboardCommand
-        {
-            get
-            {
-                if (this.playClipboardCommand == null)
-                    this.playClipboardCommand = new RelayCommand(
-                        x =>
-                        {
-                            var textToRead = x as string;
-                            if (!string.IsNullOrEmpty(textToRead))
+                            if (!this.IsRunning && !this.IsPause)
                             {
-                                var sp = new SpeechSynthesizer();
-                                sp.Rate = this.Rate;
-                                sp.Volume = this.Volume;
-                                sp.SelectVoice(this.SelectedVoice);
-                                sp.SetOutputToDefaultAudioDevice();
-                                sp.SpeakAsync(textToRead);
-                                sp.SpeakCompleted += (sender, args) =>
+                                if (string.IsNullOrEmpty(this.Text))
                                 {
-                                    sp.Dispose();
-                                };
+                                    this.OrginalText = this.Text;
+                                    this.SpeechSynthesizer.Rate = this.Rate;
+                                    this.SpeechSynthesizer.Volume = this.Volume;
+                                    this.IsRunning = true;
+                                    this.SpeechSynthesizer.SpeakAsync(this.OrginalText.Substring(this.CaretIndex));
+                                }
                             }
-                        }
-                    );
-                return this.playClipboardCommand;
-            }
-        }
-
-        private ICommand pauseCommand;
-        public ICommand PauseCommand
-        {
-            get
-            {
-                if (this.pauseCommand == null)
-                    this.pauseCommand = new RelayCommand(
-                        x =>
-                        {
-                            if (this.IsRunning && !this.IsPause)
+                            if (this.IsRunning)
                             {
                                 this.IsRunning = false;
                                 this.IsPause = true;
                                 this.SpeechSynthesizer.Pause();
                             }
-                            else
+                            if (!this.IsRunning && this.IsPause)
                             {
                                 this.IsRunning = true;
                                 this.IsPause = false;
@@ -256,7 +231,40 @@ namespace TTS.ViewModel
 
                         }
                     );
-                return this.pauseCommand;
+                return this.readCommand;
+            }
+        }
+
+        private ICommand readFromClipboardCommand;
+        public ICommand ReadFromClipboardCommand
+        {
+            get
+            {
+                if (this.readFromClipboardCommand == null)
+                    this.readFromClipboardCommand = new RelayCommand(
+                        x =>
+                        {
+                            var clipboardSynthezierIsRunning =
+                                this.ClipboardSpeechSynthesizer.State == SynthesizerState.Speaking;
+
+                            if (clipboardSynthezierIsRunning)
+                            {
+                                this.ClipboardSpeechSynthesizer.SpeakAsyncCancelAll();
+                            }
+                            else
+                            {
+                                var textToRead = x as string;
+                                if (!string.IsNullOrEmpty(textToRead) && !this.IsRunning && !clipboardSynthezierIsRunning)
+                                {
+                                    this.ClipboardSpeechSynthesizer.Rate = this.Rate;
+                                    this.ClipboardSpeechSynthesizer.Volume = this.Volume;
+                                    this.ClipboardSpeechSynthesizer.SelectVoice(this.SelectedVoice);
+                                    this.ClipboardSpeechSynthesizer.SpeakAsync(textToRead);
+                                }
+                            }
+                        }
+                    );
+                return this.readFromClipboardCommand;
             }
         }
 
@@ -286,6 +294,8 @@ namespace TTS.ViewModel
                     this.windowCloseCommand = new RelayCommand(
                         x =>
                         {
+                            this.SpeechSynthesizer.SpeakAsyncCancelAll();
+                            this.SpeechSynthesizer.Dispose();
                             ((Window)x).Close();
                         }
                     );
