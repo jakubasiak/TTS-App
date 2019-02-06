@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Microsoft.Win32;
-using NAudio.Lame;
 using NAudio.Wave;
 using TTS.Annotations;
 using TTS.Command;
@@ -330,6 +329,7 @@ namespace TTS.ViewModel
                             ofd.DefaultExt = ".txt";
                             ofd.Filter = "Text files|*.txt| RTF files|*.rtf";
                             ofd.Title = "Open document";
+                            ofd.Multiselect = false;
 
                             ofd.ShowDialog();
 
@@ -525,19 +525,6 @@ namespace TTS.ViewModel
                 }
             }
         }
-
-        //public static void ConvertWavStreamToMp3File(ref MemoryStream ms, string savetofilename)
-        //{
-        //    //rewind to beginning of stream
-        //    ms.Seek(0, SeekOrigin.Begin);
-
-        //    using (var retMs = new MemoryStream())
-        //    using (var rdr = new WaveFileReader(ms))
-        //    using (var wtr = new LameMP3FileWriter(savetofilename, rdr.WaveFormat, LAMEPreset.VBR_90))
-        //    {
-        //        rdr.CopyTo(wtr);
-        //    }
-        //}
 
         private void SpeechSynthesizer_SpeakStarted(object sender, SpeakStartedEventArgs e)
         {
