@@ -580,7 +580,7 @@ namespace TTS.ViewModel
             try
             {
                 Choices commands = new Choices();
-                commands.Add(new string[] { "read", "pouse", "resum", "stop", "read clipboard", "disable voice control", "close" });
+                commands.Add(new string[] { "read", "pouse", "resum", "stop", "read clipboard", "stop reading clipboard", "disable voice control", "close" });
                 GrammarBuilder grammarBuilder = new GrammarBuilder();
                 grammarBuilder.Append(commands);
                 Grammar grammar = new Grammar(grammarBuilder);
@@ -613,6 +613,9 @@ namespace TTS.ViewModel
                     this.StopCommand.Execute(null);
                     break;
                 case "read clipboard":
+                    this.ReadFromClipboardCommand.Execute(null);
+                    break;
+                case "stop reading clipboard":
                     this.ReadFromClipboardCommand.Execute(null);
                     break;
                 case "disable voice control":
