@@ -11,7 +11,6 @@
         mc:Ignorable="d"
         Title="TTS" Height="450" Width="800"
         Icon="../Assets/speaker.ico"
-        IconScalingMode="ScaleDownLargerFrame"
         ShowIconOnTitleBar="True" 
         StateChanged="MainWindow_OnStateChanged"
         Closed="MainWindow_OnClosed">
@@ -29,6 +28,7 @@
             <MenuItem Header="_File">
                 <MenuItem Header="New" Command="{Binding NewDocumentCommand}"/>
                 <MenuItem Header="Open" Command="{Binding OpenDuumentCommand}"/>
+                <MenuItem Header="OCR and open" Command="{Binding OcrDuumentCommand}"/>
                 <Separator/>
                 <MenuItem Header="Save" Command="{Binding SaveDocumentCommand}"/>
                 <MenuItem Header="Save As..." Command="{Binding SaveAsDocumentCommand}"/>

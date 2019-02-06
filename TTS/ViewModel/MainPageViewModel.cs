@@ -10,9 +10,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using IronOcr;
 using Microsoft.Win32;
-using NAudio.Lame;
-using NAudio.Wave;
 using TTS.Annotations;
 using TTS.Command;
 
@@ -330,6 +329,7 @@ namespace TTS.ViewModel
                             ofd.DefaultExt = ".txt";
                             ofd.Filter = "Text files|*.txt| RTF files|*.rtf";
                             ofd.Title = "Open document";
+                            ofd.Multiselect = false;
 
                             ofd.ShowDialog();
 
@@ -506,6 +506,47 @@ namespace TTS.ViewModel
             }
         }
 
+        private ICommand ocrDuumentCommand;
+        public ICommand OcrDuumentCommand
+        {
+            get
+            {
+                if (this.exportToWavCommand == null)
+                    this.exportToWavCommand = new RelayCommand(
+                        x =>
+                        {
+                            OpenFileDialog ofd = new OpenFileDialog();
+                            ofd.Filter = "png|*.png| jpg|*.jpeg |jpeg|*.jpeg |pdf|*.pdf";
+                            ofd.Title = "Save to file";
+                            ofd.Multiselect = false;
+
+                            ofd.ShowDialog();
+
+                            if (!string.IsNullOrEmpty(ofd.FileName))
+                            {
+                                var extension = Path.GetExtension(ofd.FileName);
+                                if (string.Equals(extension, ".pdf", StringComparison.InvariantCultureIgnoreCase))
+                                {
+                                    var ocr = new IronOcr.AutoOcr();                               
+                                    var result = ocr.ReadPdf(ofd.FileName);
+                                    this.Text = result.Text;
+                                }
+                                else if (string.Equals(extension, ".png", StringComparison.InvariantCultureIgnoreCase) ||
+                                         string.Equals(extension, ".jpeg", StringComparison.InvariantCultureIgnoreCase) ||
+                                         string.Equals(extension, ".jpg", StringComparison.InvariantCultureIgnoreCase))
+                                {
+                                    var ocr = new AutoOcr();
+                                    var tesult = ocr.Read(ofd.FileName);
+                                    this.Text = tesult.Text;
+                                }
+                            }
+                        }
+                    );
+
+                return this.exportToWavCommand;
+            }
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         [NotifyPropertyChangedInvocator]
@@ -516,7 +557,9 @@ namespace TTS.ViewModel
             {
                 this.SpeechSynthesizer.SelectVoice(this.SelectedVoice);
             }
-            if (propertyName == nameof(this.Volume) || propertyName == nameof(this.Rate) || propertyName == nameof(this.SelectedVoice))
+
+            if (propertyName == nameof(this.Volume) || propertyName == nameof(this.Rate) ||
+                propertyName == nameof(this.SelectedVoice))
             {
                 if (this.ApplicationState == ApplicationState.Read)
                 {
@@ -525,19 +568,6 @@ namespace TTS.ViewModel
                 }
             }
         }
-
-        //public static void ConvertWavStreamToMp3File(ref MemoryStream ms, string savetofilename)
-        //{
-        //    //rewind to beginning of stream
-        //    ms.Seek(0, SeekOrigin.Begin);
-
-        //    using (var retMs = new MemoryStream())
-        //    using (var rdr = new WaveFileReader(ms))
-        //    using (var wtr = new LameMP3FileWriter(savetofilename, rdr.WaveFormat, LAMEPreset.VBR_90))
-        //    {
-        //        rdr.CopyTo(wtr);
-        //    }
-        //}
 
         private void SpeechSynthesizer_SpeakStarted(object sender, SpeakStartedEventArgs e)
         {
