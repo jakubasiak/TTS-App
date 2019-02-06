@@ -20,9 +20,9 @@ namespace TTS.Converter
                 case ApplicationState.Pause:
                     return "Resume";
                 case ApplicationState.Idle:
-                    return "Play";
+                    return "Read";
                 default:
-                    return "Play";
+                    return "Read";
             }
         }
 
