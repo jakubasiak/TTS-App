@@ -28,15 +28,17 @@ namespace TTS
         private System.Windows.Forms.NotifyIcon notifyIcon;
         public HotKeyManager HotKeyManager { get; set; }
         public HotKey ReadClipboardHotKey { get; set; }
+        public MainPageViewModel ViewModel { get; set; }
         public MainWindow()
         {
             this.InitializeComponent();
-            ((MainPageViewModel) this.DataContext).TextBox = this.TextBox;
+            this.ViewModel = (MainPageViewModel) this.DataContext;
+            this.ViewModel.TextBox = this.TextBox;
             this.CreateNotifyIconMenu();
 
             this.HotKeyManager = new HotKeyManager();
             this.ReadClipboardHotKey = this.HotKeyManager.Register(Key.Q, ModifierKeys.Control);
-            this.HotKeyManager.KeyPressed += HotKeyManager_KeyPressed;
+            this.HotKeyManager.KeyPressed += this.HotKeyManager_KeyPressed;
         }
 
         private void HotKeyManager_KeyPressed(object sender, KeyPressedEventArgs e)
@@ -57,18 +59,41 @@ namespace TTS
             };
             this.notifyIcon.DoubleClick += this.NotifyIcon_DoubleClick;
             this.notifyIcon.ContextMenuStrip = new ContextMenuStrip();
+
             var closeMenuItem = new ToolStripMenuItem
             {
                 Text = Properties.Resources.MainWindow_MainWindow_CloseCommandTitle
             };
             closeMenuItem.Click += this.CloseMenuItem_Click;
+
             var readclipboardMenuItem = new ToolStripMenuItem
             {
                 Text = Properties.Resources.MainWindow_MainWindow_ReadClipboardCommandTitle
             };
             readclipboardMenuItem.Click += this.ReadClipboardMenuItem_Click;
+
+            var voiceControlMenuItem = new ToolStripMenuItem
+            {
+                Text = Properties.Resources.MainWindow_CreateNotifyIconMenu_VoiceControl,
+                Checked = this.ViewModel.VoiceControl,
+                CheckOnClick = true,
+                Enabled = this.ViewModel.SpeechRecognitionEnabled
+            };
+            voiceControlMenuItem.CheckedChanged += this.VoiceControlMenuItem_CheckedChanged;
+
             this.notifyIcon.ContextMenuStrip.Items.AddRange(new ToolStripItem[]
-                {readclipboardMenuItem, new ToolStripSeparator(), closeMenuItem});
+                {readclipboardMenuItem, voiceControlMenuItem, new ToolStripSeparator(), closeMenuItem});
+        }
+
+        private void VoiceControlMenuItem_CheckedChanged(object sender, EventArgs e)
+        {
+            this.ViewModel.VoiceControl = !this.ViewModel.VoiceControl;
+        }
+
+        private void CloseMenuItem_Click(object sender, EventArgs e)
+        {
+            this.notifyIcon.Visible = false;
+            this.ViewModel.WindowCloseCommand.Execute(this);
         }
 
         private void ReadClipboardMenuItem_Click(object sender, EventArgs e)
@@ -78,14 +103,7 @@ namespace TTS
 
         private void PlayClipboard()
         {
-            var textToRead = Clipboard.GetText();
-            ((MainPageViewModel) this.DataContext).ReadFromClipboardCommand.Execute(textToRead);
-        }
-
-        private void CloseMenuItem_Click(object sender, EventArgs e)
-        {
-            this.notifyIcon.Visible = false;
-            ((MainPageViewModel)this.DataContext).WindowCloseCommand.Execute(this);
+            this.ViewModel.ReadFromClipboardCommand.Execute(null);
         }
 
         private void NotifyIcon_DoubleClick(object sender, EventArgs e)
@@ -113,7 +131,7 @@ namespace TTS
             this.HotKeyManager.Unregister(this.ReadClipboardHotKey);
             this.HotKeyManager.Dispose();
             this.notifyIcon.Dispose();
-            ((MainPageViewModel)this.DataContext).WindowCloseCommand.Execute(this);
+            this.ViewModel.WindowCloseCommand.Execute(this);
         }
     }
 }

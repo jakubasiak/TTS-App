@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Speech.Recognition;
 using System.Speech.Synthesis;
 using System.Text;
 using System.Threading.Tasks;
@@ -31,6 +32,7 @@ namespace TTS.ViewModel
             this.SpeechSynthesizer.SpeakProgress += this.SpeechSynthesizer_SpeakProgress;
             this.SpeechSynthesizer.SpeakStarted += this.SpeechSynthesizer_SpeakStarted;
             this.ClipboardSpeechSynthesizer.SetOutputToDefaultAudioDevice();
+            this.configureSpeachRecognition();
         }
 
         public System.Windows.Controls.TextBox TextBox { get; set; }
@@ -62,6 +64,19 @@ namespace TTS.ViewModel
                 return this.clipboardSpeechSynthesizer;
             }
         }
+  
+        private SpeechRecognitionEngine speechRecognitionEngine;
+        public SpeechRecognitionEngine SpeechRecognitionEngine
+        {
+            get
+            {
+                if (this.speechRecognitionEngine == null)
+                {
+                    this.speechRecognitionEngine = new SpeechRecognitionEngine();
+                }
+                return this.speechRecognitionEngine;
+            }
+        }
 
         ApplicationState applicationState;
         public ApplicationState ApplicationState
@@ -71,6 +86,28 @@ namespace TTS.ViewModel
             {
                 this.applicationState = value;
                 this.OnPropertyChanged(nameof(this.ApplicationState));
+            }
+        }
+
+        bool speechRecognitionEnabled;
+        public bool SpeechRecognitionEnabled
+        {
+            get => this.speechRecognitionEnabled;
+            set
+            {
+                this.speechRecognitionEnabled = value;
+                this.OnPropertyChanged(nameof(this.SpeechRecognitionEnabled));
+            }
+        }
+
+        bool voiceControl;
+        public bool VoiceControl
+        {
+            get => this.voiceControl;
+            set
+            {
+                this.voiceControl = value;
+                this.OnPropertyChanged(nameof(this.VoiceControl));
             }
         }
 
@@ -236,7 +273,7 @@ namespace TTS.ViewModel
                             }
                             else
                             {
-                                var textToRead = x as string;
+                                var textToRead = Clipboard.GetText();
                                 if (!string.IsNullOrEmpty(textToRead) && this.ApplicationState == ApplicationState.Idle)
                                 {
                                     this.ClipboardSpeechSynthesizer.Rate = this.Rate;
@@ -523,6 +560,67 @@ namespace TTS.ViewModel
                     this.ApplicationState = ApplicationState.Idle;
                     this.SpeechSynthesizer.SpeakAsyncCancelAll();
                 }
+            }
+
+            if (propertyName == nameof(this.VoiceControl))
+            {
+                if (this.VoiceControl)
+                {
+                    this.SpeechRecognitionEngine.RecognizeAsync(RecognizeMode.Multiple);
+                }
+                else
+                {
+                    this.SpeechRecognitionEngine.RecognizeAsyncCancel();
+                }
+            }
+        }
+
+        private void configureSpeachRecognition()
+        {
+            try
+            {
+                Choices commands = new Choices();
+                commands.Add(new string[] { "read", "pouse", "resum", "stop", "read clipboard", "disable voice control", "close" });
+                GrammarBuilder grammarBuilder = new GrammarBuilder();
+                grammarBuilder.Append(commands);
+                Grammar grammar = new Grammar(grammarBuilder);
+                this.SpeechRecognitionEngine.LoadGrammarAsync(grammar);
+                this.SpeechRecognitionEngine.SetInputToDefaultAudioDevice();
+                this.SpeechRecognitionEngine.SpeechRecognized += this.SpeechRecognitionEngine_SpeechRecognized;
+                this.SpeechRecognitionEnabled = true;
+            }
+            catch (Exception e)
+            {
+                this.SpeechRecognitionEnabled = false;
+            }
+
+        }
+
+        private void SpeechRecognitionEngine_SpeechRecognized(object sender, SpeechRecognizedEventArgs e)
+        {
+            switch (e.Result.Text)
+            {
+                case "read":
+                    this.ReadCommand.Execute(null);
+                    break;
+                case "pouse":
+                    this.ReadCommand.Execute(null);
+                    break;
+                case "resum":
+                    this.ReadCommand.Execute(null);
+                    break;
+                case "stop":
+                    this.StopCommand.Execute(null);
+                    break;
+                case "read clipboard":
+                    this.ReadFromClipboardCommand.Execute(null);
+                    break;
+                case "disable voice control":
+                    this.VoiceControl = false;
+                    break;
+                case "close":
+                    this.WindowCloseCommand.Execute(null);
+                    break;
             }
         }
 

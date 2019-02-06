@@ -129,4 +129,7 @@
   <data name="MainWindow_MainWindow_ReadClipboardCommandTitle" xml:space="preserve">
     <value>Read clipboard</value>
   </data>
+  <data name="MainWindow_CreateNotifyIconMenu_VoiceControl" xml:space="preserve">
+    <value>Voice control</value>
+  </data>
 </root>

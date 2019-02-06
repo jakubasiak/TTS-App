@@ -61,6 +61,15 @@ namespace TTS.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Voice control.
+        /// </summary>
+        internal static string MainWindow_CreateNotifyIconMenu_VoiceControl {
+            get {
+                return ResourceManager.GetString("MainWindow_CreateNotifyIconMenu_VoiceControl", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Close.
         /// </summary>
         internal static string MainWindow_MainWindow_CloseCommandTitle {

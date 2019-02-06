@@ -15,14 +15,14 @@
         ShowIconOnTitleBar="True" 
         StateChanged="MainWindow_OnStateChanged"
         Closed="MainWindow_OnClosed">
-    <Window.Resources>
+    <controls:MetroWindow.Resources>
         <vm:MainPageViewModel x:Key="MainPageViewModel" />
         <c:ApplicationStateToStringConverter x:Key="ApplicationStateToStringConverter" />
         <c:ApplicationStateToBoolConverter x:Key="ApplicationStateToBoolConverter" />
-    </Window.Resources>
-    <Window.DataContext>
+    </controls:MetroWindow.Resources>
+    <controls:MetroWindow.DataContext>
         <vm:MainPageViewModel/>
-    </Window.DataContext>
+    </controls:MetroWindow.DataContext>
     <DockPanel>
         <Menu DockPanel.Dock="Top" Height="30">
 
@@ -50,7 +50,10 @@
             <MenuItem Header="Export">
                 <MenuItem Header="Export to .wav" Command="{Binding ExportToWavCommand}"/>
             </MenuItem>
-            <MenuItem Header="_Help">
+            <MenuItem Header="Options">
+                <MenuItem Header="Voice control" IsCheckable="True" IsChecked="{Binding Path=VoiceControl}" IsEnabled="{Binding SpeechRecognitionEnabled}"/>
+            </MenuItem>
+            <MenuItem Header="Help">
                 <MenuItem Header="About" Command="{Binding AboutCommand}"/>
             </MenuItem>
 
