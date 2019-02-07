@@ -27,13 +27,15 @@ namespace TTS.ViewModel
             this.Voices = this.SpeechSynthesizer.GetInstalledVoices().Select(v => v.VoiceInfo.Name).ToList();
             this.SelectedVoice = string.IsNullOrEmpty(Properties.Settings.Default.SelectedVoice) ? this.Voices.FirstOrDefault() : Properties.Settings.Default.SelectedVoice;
             this.ApplicationState = ApplicationState.Idle;
-            this.CharacterPosition = 0;
+            this.CaretIndex = 0;
             this.SpeechSynthesizer.SpeakCompleted += this.SpeechSynthesizer_SpeakCompleted;
             this.SpeechSynthesizer.SpeakProgress += this.SpeechSynthesizer_SpeakProgress;
+            this.SpeechSynthesizer.SpeakStarted += this.SpeechSynthesizer_SpeakStarted;
             this.ClipboardSpeechSynthesizer.SetOutputToDefaultAudioDevice();
             this.ConfigureSpeachRecognition();
         }
 
+        #region Properties
         public System.Windows.Controls.TextBox TextBox { get; set; }
 
         public string FilePath { get; set; }
@@ -63,7 +65,7 @@ namespace TTS.ViewModel
                 return this.clipboardSpeechSynthesizer;
             }
         }
-  
+
         private SpeechRecognitionEngine speechRecognitionEngine;
         public SpeechRecognitionEngine SpeechRecognitionEngine
         {
@@ -208,6 +210,9 @@ namespace TTS.ViewModel
                 this.OnPropertyChanged(nameof(this.Text));
             }
         }
+        #endregion
+
+        #region Commands
 
         private ICommand readCommand;
         public ICommand ReadCommand
@@ -329,7 +334,7 @@ namespace TTS.ViewModel
                             this.SpeechSynthesizer.SpeakAsyncCancelAll();
                             this.selectedVoice = this.Voices.FirstOrDefault();
                             this.ApplicationState = ApplicationState.Idle;
-                            this.CharacterPosition = 0;
+                            this.CaretIndex = 0;
                             this.ReadProgress = this.CalculateProgress();
                         }
                     );
@@ -481,7 +486,7 @@ namespace TTS.ViewModel
                             {
                                 var m = Mouse.GetPosition(this.TextBox);
                                 var index = this.TextBox.GetCharacterIndexFromPoint(m, false);
-                                this.CaretIndex = index >= 0 ? index : this.CaretIndex;
+                                this.CaretIndex = index < 0 ? 0 : index;
                                 this.ReadProgress = this.CalculateProgress();
                             }
                         }
@@ -533,6 +538,9 @@ namespace TTS.ViewModel
             }
         }
 
+        #endregion
+
+        #region Methods
         public event PropertyChangedEventHandler PropertyChanged;
 
         [NotifyPropertyChangedInvocator]
@@ -572,12 +580,13 @@ namespace TTS.ViewModel
 
         private void Reset()
         {
+            this.SpeechSynthesizer.SpeakCompleted -= this.SpeechSynthesizer_SpeakCompleted;
             this.SpeechSynthesizer.Resume();
             this.SpeechSynthesizer.SpeakAsyncCancelAll();
+            this.SpeechSynthesizer.SpeakCompleted += this.SpeechSynthesizer_SpeakCompleted;
             this.ApplicationState = ApplicationState.Idle;
             this.CurrentReadedText = null;
 
-            this.CharacterPosition = 0;
             this.CaretIndex = 0;
             this.TextBox.Focus();
             this.TextBox.Select(0, 0);
@@ -637,11 +646,17 @@ namespace TTS.ViewModel
             }
         }
 
+        private int beginPossition = 0;
+        private void SpeechSynthesizer_SpeakStarted(object sender, SpeakStartedEventArgs e)
+        {
+            this.beginPossition = this.CaretIndex;
+        }
+
         private void SpeechSynthesizer_SpeakProgress(object sender, SpeakProgressEventArgs e)
         {
-            this.CharacterPosition = this.CaretIndex + e.CharacterPosition;
+            this.CaretIndex = this.beginPossition + e.CharacterPosition;
             this.CurrentReadedText = e.Text;
-            this.TextBox.Select(this.CaretIndex + e.CharacterPosition, e.CharacterCount);
+            this.TextBox.Select(this.CaretIndex, e.CharacterCount);
             this.ReadProgress = this.CalculateProgress();
         }
 
@@ -649,19 +664,16 @@ namespace TTS.ViewModel
         {
             this.CurrentReadedText = null;
             this.TextBox.Focus();
-            this.TextBox.Select(this.CharacterPosition, 0);
-            this.CaretIndex = this.CharacterPosition;
-            this.ApplicationState = ApplicationState.Idle;
+            this.TextBox.Select(this.CaretIndex, 0);
             this.ReadProgress = this.CalculateProgress();
+            this.ApplicationState = ApplicationState.Idle;
         }
 
         private float CalculateProgress()
         {
-            if (string.IsNullOrEmpty(this.Text))
-                return 0;
-            if (this.ApplicationState == ApplicationState.Read)
-                return ((float)this.CharacterPosition / this.Text.Length) * 100;
-            return ((float)this.CaretIndex / this.Text.Length) * 100;
+            return string.IsNullOrEmpty(this.Text) ? 0 : ((float)this.CaretIndex / this.Text.Length) * 100;
         }
+        #endregion
+
     }
 }
