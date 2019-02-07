@@ -30,9 +30,8 @@ namespace TTS.ViewModel
             this.CharacterPosition = 0;
             this.SpeechSynthesizer.SpeakCompleted += this.SpeechSynthesizer_SpeakCompleted;
             this.SpeechSynthesizer.SpeakProgress += this.SpeechSynthesizer_SpeakProgress;
-            this.SpeechSynthesizer.SpeakStarted += this.SpeechSynthesizer_SpeakStarted;
             this.ClipboardSpeechSynthesizer.SetOutputToDefaultAudioDevice();
-            this.configureSpeachRecognition();
+            this.ConfigureSpeachRecognition();
         }
 
         public System.Windows.Controls.TextBox TextBox { get; set; }
@@ -199,17 +198,6 @@ namespace TTS.ViewModel
             }
         }
 
-        private string orginalText;
-        public string OrginalText
-        {
-            get => this.orginalText;
-            set
-            {
-                this.orginalText = value;
-                this.OnPropertyChanged(nameof(this.OrginalText));
-            }
-        }
-
         string text;
         public string Text
         {
@@ -234,11 +222,10 @@ namespace TTS.ViewModel
                             {
                                 if (!string.IsNullOrEmpty(this.Text))
                                 {
-                                    this.OrginalText = this.Text;
                                     this.SpeechSynthesizer.Rate = this.Rate;
                                     this.SpeechSynthesizer.Volume = this.Volume;
                                     this.ApplicationState = ApplicationState.Read;
-                                    this.SpeechSynthesizer.SpeakAsync(this.OrginalText.Substring(this.CaretIndex));
+                                    this.SpeechSynthesizer.SpeakAsync(this.Text.Substring(this.CaretIndex));
                                 }
                             }
                             else if (this.ApplicationState == ApplicationState.Read)
@@ -339,7 +326,6 @@ namespace TTS.ViewModel
                         x =>
                         {
                             this.Text = string.Empty;
-                            this.OrginalText = string.Empty;
                             this.SpeechSynthesizer.SpeakAsyncCancelAll();
                             this.selectedVoice = this.Voices.FirstOrDefault();
                             this.ApplicationState = ApplicationState.Idle;
@@ -524,17 +510,21 @@ namespace TTS.ViewModel
 
                             if (!string.IsNullOrEmpty(sfd.FileName))
                             {
-                                this.OrginalText = this.Text;
                                 this.SpeechSynthesizer.Rate = this.Rate;
                                 this.SpeechSynthesizer.Volume = this.Volume;
                                 this.SpeechSynthesizer.SetOutputToWaveFile(sfd.FileName);
                                 this.ApplicationState = ApplicationState.Read;
+                                this.SpeechSynthesizer.SpeakAsync(this.Text.Substring(this.CaretIndex));
 
-                                while (this.SpeechSynthesizer.SpeakAsync(this.OrginalText.Substring(this.CaretIndex)).IsCompleted)
+                                void OnComplete(object sender, SpeakCompletedEventArgs args)
                                 {
                                     this.SpeechSynthesizer.SetOutputToDefaultAudioDevice();
                                     this.ApplicationState = ApplicationState.Idle;
+                                    this.SpeechSynthesizer.SpeakCompleted -= OnComplete;
                                 }
+
+                                this.SpeechSynthesizer.SpeakCompleted += OnComplete;
+
                             }
                         }
                     );
@@ -573,9 +563,29 @@ namespace TTS.ViewModel
                     this.SpeechRecognitionEngine.RecognizeAsyncCancel();
                 }
             }
+
+            if (propertyName == nameof(this.Text))
+            {
+                this.Reset();
+            }
         }
 
-        private void configureSpeachRecognition()
+        private void Reset()
+        {
+            this.SpeechSynthesizer.Resume();
+            this.SpeechSynthesizer.SpeakAsyncCancelAll();
+            this.ApplicationState = ApplicationState.Idle;
+            this.CurrentReadedText = null;
+
+            this.CharacterPosition = 0;
+            this.CaretIndex = 0;
+            this.TextBox.Focus();
+            this.TextBox.Select(0, 0);
+
+            this.ReadProgress = this.CalculateProgress();
+        }
+
+        private void ConfigureSpeachRecognition()
         {
             try
             {
@@ -627,11 +637,6 @@ namespace TTS.ViewModel
             }
         }
 
-        private void SpeechSynthesizer_SpeakStarted(object sender, SpeakStartedEventArgs e)
-        {
-            this.orginalText = this.Text;
-        }
-
         private void SpeechSynthesizer_SpeakProgress(object sender, SpeakProgressEventArgs e)
         {
             this.CharacterPosition = this.CaretIndex + e.CharacterPosition;
@@ -643,7 +648,6 @@ namespace TTS.ViewModel
         private void SpeechSynthesizer_SpeakCompleted(object sender, SpeakCompletedEventArgs e)
         {
             this.CurrentReadedText = null;
-            this.Text = this.orginalText;
             this.TextBox.Focus();
             this.TextBox.Select(this.CharacterPosition, 0);
             this.CaretIndex = this.CharacterPosition;

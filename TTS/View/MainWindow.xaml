@@ -12,7 +12,7 @@
         Title="TTS" Height="450" Width="800"
         Icon="../Assets/speaker.ico"
         IconScalingMode="ScaleDownLargerFrame"
-        ShowIconOnTitleBar="True" 
+        ShowIconOnTitleBar="False" 
         StateChanged="MainWindow_OnStateChanged"
         Closed="MainWindow_OnClosed">
     <controls:MetroWindow.Resources>
@@ -121,7 +121,7 @@
                 <StatusBarItem>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="Caret Index: "></TextBlock>
-                        <TextBlock Width="50" Name="CaretIndex" Text="{Binding Path=CaretIndex, Mode=OneWay}" FontWeight="Bold"></TextBlock>
+                        <TextBlock Width="50" Name="CaretIndex" Text="{Binding Path=CaretIndex, Mode=TwoWay}" FontWeight="Bold"></TextBlock>
                     </StackPanel>
                 </StatusBarItem>
                 <StatusBarItem>
@@ -137,7 +137,7 @@
                             <ColumnDefinition/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="Progress:" Margin="0 0 5 0"></TextBlock>
-                        <ProgressBar Grid.Column="1" Name="ProgressBar" Width="150" Height="15" Margin="0 0 10 0"  Minimum ="0" Maximum="100" Value="{Binding Path=ReadProgress, Mode=OneWay}"></ProgressBar>
+                        <ProgressBar Grid.Column="1" Name="ProgressBar" Width="150" Height="15" Margin="0 0 10 0"  Minimum ="0" Maximum="100" Value="{Binding Path=ReadProgress, Mode=TwoWay}"></ProgressBar>
                         <TextBlock Grid.Column="1" Text="{Binding  Path=ReadProgress, StringFormat={}{0:0}%}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Grid>
                 </StatusBarItem>
