@@ -13,6 +13,7 @@
         Icon="../Assets/speaker.ico"
         IconScalingMode="ScaleDownLargerFrame"
         ShowIconOnTitleBar="False" 
+        WindowStartupLocation="CenterScreen"
         StateChanged="MainWindow_OnStateChanged"
         Closed="MainWindow_OnClosed">
     <controls:MetroWindow.Resources>

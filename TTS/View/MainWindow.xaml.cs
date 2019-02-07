@@ -54,7 +54,7 @@ namespace TTS
                 BalloonTipTitle = Properties.Resources.MainWindow_MainWindow_Tip_Title,
                 BalloonTipText = Properties.Resources.MainWindow_MainWindow_Tip_Text,
                 Text = Properties.Resources.MainWindow_MainWindow_Tip_Title,
-                Icon = new System.Drawing.Icon(@"../../Assets/speaker.ico", new System.Drawing.Size(16, 16)),
+                Icon = Properties.Resources.speaker,
                 Visible = true
             };
             this.notifyIcon.DoubleClick += this.NotifyIcon_DoubleClick;

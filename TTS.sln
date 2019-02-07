@@ -5,7 +5,13 @@ VisualStudioVersion = 15.0.27703.2035
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TTS", "TTS\TTS.csproj", "{B0DD680B-A140-4E6A-A9C3-EF7EA251617A}"
 EndProject
-Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "TTS.Setup", "TTS.Setup\TTS.Setup.vdproj", "{C15A48B8-E63E-403E-91DF-9A8B2E4C5BDA}"
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "TTS.Setup", "TTS.Setup\TTS.Setup.vdproj", "{DD33C260-05C6-4C54-B2B2-D7D244AFEA03}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Release", "Release", "{C949EE6E-EEF0-4BF8-8055-9BF2F3255CA8}"
+	ProjectSection(SolutionItems) = preProject
+		TTS.Setup\Release\setup.exe = TTS.Setup\Release\setup.exe
+		TTS.Setup\Release\TTS.Setup.msi = TTS.Setup\Release\TTS.Setup.msi
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,8 +23,8 @@ Global
 		{B0DD680B-A140-4E6A-A9C3-EF7EA251617A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B0DD680B-A140-4E6A-A9C3-EF7EA251617A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B0DD680B-A140-4E6A-A9C3-EF7EA251617A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C15A48B8-E63E-403E-91DF-9A8B2E4C5BDA}.Debug|Any CPU.ActiveCfg = Debug
-		{C15A48B8-E63E-403E-91DF-9A8B2E4C5BDA}.Release|Any CPU.ActiveCfg = Release
+		{DD33C260-05C6-4C54-B2B2-D7D244AFEA03}.Debug|Any CPU.ActiveCfg = Debug
+		{DD33C260-05C6-4C54-B2B2-D7D244AFEA03}.Release|Any CPU.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

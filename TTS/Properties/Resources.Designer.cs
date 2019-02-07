@@ -104,5 +104,15 @@ namespace TTS.Properties {
                 return ResourceManager.GetString("MainWindow_MainWindow_Tip_Title", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon speaker {
+            get {
+                object obj = ResourceManager.GetObject("speaker", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
     }
 }
